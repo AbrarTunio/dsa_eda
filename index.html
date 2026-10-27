@@ -1,0 +1,1491 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EDA Lab: interactive Exploratory Data Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --smoke:#f5f5f5;
+  --ink:#18181b; --ink2:#3f3f46; --muted:#71717a;
+  --line:rgba(24,24,27,.07); --line2:rgba(24,24,27,.13);
+  --purple:#7c3aed; --orange:#ea580c; --green:#16a34a; --pink:#db2777; --teal:#0d9488; --amber:#f59e0b; --blue:#2563eb; --red:#dc2626;
+  --lagoon:var(--teal); --iris:var(--purple); --rose:var(--pink);
+  --accent:#15803d; --accent2:#22c55e; --hcol:#16a34a;
+  --glass:var(--smoke); --glass-hi:var(--smoke); --rim:transparent; --code:var(--smoke);
+  --sd:rgba(160,160,172,.5);
+  --clay:12px 12px 28px var(--sd),-12px -12px 28px #fff,inset 3px 3px 6px rgba(255,255,255,.95),inset -4px -4px 10px rgba(160,160,172,.22);
+  --clay-sm:6px 6px 14px var(--sd),-6px -6px 14px #fff,inset 2px 2px 3px rgba(255,255,255,.95),inset -3px -3px 6px rgba(160,160,172,.2);
+  --clay-in:inset 6px 6px 14px rgba(160,160,172,.42),inset -6px -6px 14px #fff;
+  --clay-in-sm:inset 3px 3px 7px rgba(160,160,172,.42),inset -3px -3px 7px #fff;
+  --fd:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --fb:"Atkinson Hyperlegible",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --fm:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+[data-acc="1"]{--accent:#15803d;--accent2:#22c55e;--hcol:#16a34a}
+[data-acc="2"]{--accent:#6d28d9;--accent2:#a855f7;--hcol:#7c3aed}
+[data-acc="3"]{--accent:#c2410c;--accent2:#f97316;--hcol:#ea580c}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 100px);scroll-behavior:smooth}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--smoke);color:var(--ink);font:400 17px/1.6 var(--fb);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--smoke)}
+.aura{display:none}
+h1,h2,h3,h4,h5{font-family:var(--fd);letter-spacing:-.015em;margin:0 0 .4em;line-height:1.15;color:var(--ink)}
+h2{font-size:clamp(1.7rem,3vw,2.3rem);font-weight:780}
+h3{font-size:clamp(1.45rem,2.6vw,1.9rem);font-weight:760}
+h4{font-size:1.15rem;font-weight:720}
+h5{font-size:1.02rem;font-weight:720}
+p{margin:0 0 .9em;max-width:72ch}
+a{color:var(--accent)}
+.muted{color:var(--muted)}
+.small{font-size:.88rem}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,white);outline-offset:3px;border-radius:10px}
+
+/* clay surfaces */
+.glass{background:var(--smoke);border:0;box-shadow:var(--clay)}
+.clay-color,.btn.primary,.chip.on,.lnum,.obadge,.ln,.case-n,.pill.on i,.sbtn.on i{background:linear-gradient(145deg,var(--accent2),var(--accent));color:#fff;box-shadow:6px 6px 14px color-mix(in srgb,var(--accent) 35%,transparent),-4px -4px 10px #fff,inset 3px 3px 6px rgba(255,255,255,.4),inset -4px -4px 8px rgba(0,0,0,.18)}
+
+/* heading colours */
+.hero h1{color:var(--purple)}
+.section-title{color:var(--orange)}
+.lhead h2,.step-head h3,.lcard h3,.ohead h4{color:var(--hcol)}
+.sub{color:var(--pink)}
+.sim-head h4{color:var(--teal)}
+.concept h4{color:var(--orange)}
+.colinfo h5,.var h5,.link h5{color:var(--purple)}
+.trio .mini:nth-child(1) h5{color:var(--purple)}
+.trio .mini:nth-child(2) h5{color:var(--orange)}
+.trio .mini:nth-child(3) h5{color:var(--green)}
+.mini.found h5{color:var(--orange)}
+
+/* top bar */
+.topwrap{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;padding:14px 16px 0}
+.topbar{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 12px 10px 18px;border-radius:26px}
+.brand{display:flex;align-items:center;gap:10px;font:800 1.15rem/1 var(--fd);white-space:nowrap;color:var(--ink)}
+.brand svg{width:30px;height:30px}
+.pills{display:flex;gap:10px;margin-left:auto;flex-wrap:nowrap}
+.pill{display:flex;align-items:center;gap:8px;border:0;background:var(--smoke);border-radius:999px;padding:6px 14px 6px 6px;font:700 .92rem var(--fb);color:var(--ink2);cursor:pointer;box-shadow:var(--clay-sm);transition:box-shadow .25s,transform .2s}
+.pill:hover{transform:translateY(-1px)}
+.pill i{font-style:normal;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--smoke);box-shadow:var(--clay-in-sm);color:var(--accent);font-weight:800;font-size:.85rem}
+.pill.on{box-shadow:var(--clay-in);color:var(--ink)}
+.ring{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink2);white-space:nowrap}
+.ring svg{width:36px;height:36px;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(160,160,172,.3);stroke-width:4}
+.ring-fg{fill:none;stroke:url(#ringgrad);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .6s}
+
+main{max-width:1180px;margin:0 auto;padding:0 20px 96px}
+.hero{display:grid;grid-template-columns:1fr 1.05fr;gap:44px;align-items:center;padding:60px 0 56px}
+.hero h1{font-size:clamp(2.5rem,5.6vw,4.4rem);font-weight:800;line-height:.98;letter-spacing:-.035em;margin-bottom:.35em}
+.hero .lede{font-size:1.15rem;color:var(--ink2);max-width:46ch}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.facts{display:flex;gap:16px;flex-wrap:wrap;margin-top:30px;color:var(--ink2);font-size:.95rem}
+.facts>div{padding:12px 18px;border-radius:22px;box-shadow:var(--clay-sm)}
+.facts b{display:block;font:800 1.6rem/1.1 var(--fd)}
+.facts>div:nth-child(1) b{color:var(--purple)}.facts>div:nth-child(2) b{color:var(--orange)}.facts>div:nth-child(3) b{color:var(--green)}
+.heroviz{border-radius:40px;padding:20px 20px 22px}
+.heroviz .controls{justify-content:flex-start}
+#hero-svg{margin:8px 0;padding:10px;border-radius:28px;box-shadow:var(--clay-in)}
+.hdot{fill:var(--teal);stroke:#fff;stroke-width:1.6;transition:transform 1s cubic-bezier(.2,.8,.2,1),fill .5s,opacity .5s;filter:drop-shadow(2px 3px 3px rgba(13,148,136,.35))}
+[data-mode="correlate"] .hdot{fill:var(--purple);filter:drop-shadow(2px 3px 3px rgba(124,58,237,.35))}
+[data-mode="detect"] .hdot{opacity:.25;filter:none}
+[data-mode="detect"] .hdot.anom{opacity:1;fill:var(--orange);filter:drop-shadow(0 0 8px rgba(234,88,12,.7));stroke-width:2.4}
+.hl{opacity:0;transition:opacity .6s}
+.hl.show{opacity:1}
+#hero-cap{min-height:3.2em;margin:10px 4px 0;color:var(--ink2);font-size:.98rem}
+
+.section-title{margin:24px 0 20px}
+.path{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.lcard{border-radius:36px;padding:26px 24px 22px;display:flex;flex-direction:column;background:var(--smoke);box-shadow:var(--clay);transition:box-shadow .3s}
+.lcard.on{box-shadow:var(--clay),0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
+.lcard h3{font-size:1.3rem}
+.lcard p{font-size:.97rem}
+.lnum{width:50px;height:50px;border-radius:18px;display:grid;place-items:center;font:800 1.4rem/1 var(--fd);margin-bottom:16px}
+.lnum.big{width:66px;height:66px;font-size:2rem;border-radius:22px;flex:none;margin:0}
+.lsteps{margin:4px 0 16px;padding-left:1.2em;font-size:.9rem;color:var(--ink2)}
+.lsteps li{margin:2px 0}
+.lsteps li.done{color:var(--green);font-weight:700}
+.lsteps li.done::marker{content:"✓  "}
+.lfoot{display:flex;align-items:center;gap:10px;margin:auto 0 16px}
+.lbar{flex:1;height:12px;border-radius:9px;box-shadow:var(--clay-in-sm);overflow:hidden}
+.lbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:9px;transition:width .5s}
+
+.lesson{margin-top:64px;scroll-margin-top:100px}
+.lhead{display:flex;gap:22px;align-items:center;margin-bottom:22px}
+.lhead p{margin:0}
+.lhead h2{margin:.1em 0 .2em}
+.stepper{display:flex;gap:14px;overflow-x:auto;padding:12px 12px 22px;margin:0 -12px;scrollbar-width:thin}
+.sbtn{flex:1 0 170px;display:flex;align-items:center;gap:10px;text-align:left;border:0;background:var(--smoke);border-radius:22px;padding:12px 14px;font:700 .9rem/1.25 var(--fb);color:var(--ink2);cursor:pointer;box-shadow:var(--clay-sm);transition:box-shadow .25s}
+.sbtn i{font-style:normal;flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;box-shadow:var(--clay-in-sm);font-weight:800}
+.sbtn.done i{color:var(--green)}
+.sbtn.on{box-shadow:var(--clay-in);color:var(--ink)}
+.step{border-radius:44px;padding:38px 40px;scroll-margin-top:100px}
+.step-head{margin-bottom:24px}
+.step-head p.muted{margin-bottom:.2em;font-weight:700}
+.lede{font-size:1.1rem;color:var(--ink2)}
+.sub{margin-top:30px}
+
+.concept{border-radius:26px;padding:18px 22px;margin:0 0 22px;background:var(--smoke);box-shadow:var(--clay-in)}
+.concept p{margin:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.two.wide-left{grid-template-columns:1.35fr 1fr}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:0 0 22px}
+.mini{border-radius:24px;padding:16px 18px;background:var(--smoke);box-shadow:var(--clay-sm)}
+.mini p{margin:0 0 .4em;font-size:.95rem}
+.mini.found{box-shadow:var(--clay-sm),0 0 0 2px color-mix(in srgb,var(--orange) 45%,transparent)}
+.mini.locked{box-shadow:var(--clay-in-sm)}
+.sim{border-radius:32px;padding:22px;margin:20px 0;background:var(--smoke);box-shadow:var(--clay-in)}
+.sim-head h4{margin-bottom:.2em}
+.sim-head p{color:var(--ink2);font-size:.97rem}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:14px 0}
+.btn{font:700 .95rem/1.1 var(--fb);padding:12px 18px;border-radius:18px;border:0;background:var(--smoke);color:var(--ink);cursor:pointer;box-shadow:var(--clay-sm);transition:transform .15s,box-shadow .2s}
+.btn:hover:not(:disabled){transform:translateY(-2px)}
+.btn:active:not(:disabled){transform:translateY(0);box-shadow:var(--clay-in-sm)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{color:#fff}
+.chip{font:700 .9rem/1 var(--fb);padding:10px 15px;border-radius:999px;border:0;background:var(--smoke);color:var(--ink2);cursor:pointer;box-shadow:var(--clay-sm);transition:transform .15s,box-shadow .2s}
+.chip:hover{transform:translateY(-1px)}
+.code-chip{font-family:var(--fm);font-size:.86rem}
+.range{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.93rem;color:var(--ink2)}
+.range.grow{flex:1;min-width:240px}
+.range.grow input{flex:1}
+.range output{min-width:3.6em;font:800 1rem var(--fd);color:var(--accent)}
+input[type=range]{accent-color:var(--accent);width:180px}
+.check{display:flex;align-items:center;gap:8px;font-size:.93rem;color:var(--ink2);cursor:pointer;font-weight:700}
+.check input{accent-color:var(--accent);width:18px;height:18px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin:14px 0}
+.stat{border-radius:24px;padding:14px 18px;background:var(--smoke);box-shadow:var(--clay-sm)}
+.stat span{font-size:.85rem;color:var(--muted);font-weight:700}
+.stat b{display:block;font:800 1.75rem/1.2 var(--fd);color:var(--ink)}
+.stat p{margin:.3em 0 0;font-size:.86rem;color:var(--ink2)}
+.stat.mean b{color:var(--teal)} .stat.med b{color:var(--purple)}
+.stats .stat:nth-child(3n+1):not(.mean) b{color:var(--purple)}
+.stats .stat:nth-child(3n+2):not(.med) b{color:var(--orange)}
+.stats .stat:nth-child(3n) b{color:var(--green)}
+.chips-row{display:flex;flex-wrap:wrap;gap:5px}
+.chips-row i{font-style:normal;padding:2px 8px;border-radius:9px;box-shadow:var(--clay-in-sm);font-size:.8rem}
+.chips-row i.on{background:var(--purple);color:#fff;box-shadow:none}
+.insight{border-radius:22px;padding:14px 18px;background:var(--smoke);box-shadow:var(--clay-sm);font-size:.97rem;margin:12px 0}
+.insight.soft{box-shadow:var(--clay-in-sm)}
+.insight.warn{box-shadow:var(--clay-sm),inset 6px 0 0 var(--orange);padding-left:24px}
+.insight ol{margin:.4em 0 .4em 1.2em;padding:0}
+.note{font-size:.9rem;color:var(--ink2);margin:.6em 0 0}
+.badge{display:inline-block;font-size:.8rem;font-weight:800;padding:4px 12px;border-radius:999px;box-shadow:var(--clay-in-sm);color:var(--accent);margin-bottom:8px}
+.colinfo{border-radius:24px;padding:16px 20px;background:var(--smoke);box-shadow:var(--clay-sm);min-height:120px}
+.colinfo p{margin:.3em 0}
+
+.tablewrap{overflow-x:auto;border-radius:22px;margin:12px 0;padding:6px}
+table.data{border-collapse:separate;border-spacing:0;font-size:.9rem;width:100%;background:var(--smoke);border-radius:20px;box-shadow:var(--clay-sm);overflow:hidden}
+table.data th,table.data td{padding:9px 13px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data thead th{font-weight:800;color:var(--accent);border-bottom:2px solid var(--line2)}
+table.data tbody tr:last-child td,table.data tbody tr:last-child th{border-bottom:0}
+table.data td.idx,table.data th.idx{color:var(--muted);width:1%}
+table.data td.nan{color:var(--pink);font-style:italic;font-weight:700}
+table.data td.hot{color:var(--orange);font-weight:800;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--orange) 40%,transparent);border-radius:10px}
+table.data tfoot td{text-align:left;white-space:normal;line-height:1.7;border-top:2px solid var(--line2)}
+table.calc{max-width:640px}
+.colbtn{font:800 .9rem var(--fb);background:none;border:0;padding:3px 8px;border-radius:9px;cursor:pointer;color:var(--accent);text-decoration:underline dotted;text-underline-offset:3px}
+.colbtn.on{box-shadow:var(--clay-in-sm);text-decoration:none}
+
+.console{border-radius:28px;overflow:hidden;background:var(--smoke);box-shadow:var(--clay-sm)}
+.console-top{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);font:700 .85rem var(--fm);color:var(--ink2)}
+.lights{display:flex;gap:6px}.lights i{width:11px;height:11px;border-radius:50%;background:#f87171;box-shadow:inset -1px -1px 2px rgba(0,0,0,.2)}.lights i:nth-child(2){background:#fbbf24}.lights i:nth-child(3){background:#4ade80}
+.console-cmds{display:flex;flex-wrap:wrap;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.console-cell{padding:16px 18px;min-height:120px}
+.cin{display:flex;gap:10px;align-items:baseline;font:14px var(--fm)}
+.pr{color:var(--accent);font:700 .85rem var(--fm);flex:none}
+.typed{font-family:var(--fm)}
+.cout{margin-top:12px}
+pre.out{margin:0;font:13px/1.55 var(--fm);background:var(--smoke);box-shadow:var(--clay-in-sm);padding:14px 16px;border-radius:18px;overflow-x:auto;color:var(--ink)}
+
+.code{border-radius:28px;overflow:hidden;background:var(--smoke);box-shadow:var(--clay-sm);margin-top:12px}
+.code-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px 10px 18px;border-bottom:1px solid var(--line);font:800 .85rem var(--fb);color:var(--ink2)}
+.copy{font:700 .82rem var(--fb);border:0;background:var(--smoke);border-radius:12px;padding:7px 12px;cursor:pointer;color:var(--ink2);box-shadow:var(--clay-sm)}
+.code pre{margin:0;padding:18px 20px;overflow-x:auto;font:13.5px/1.65 var(--fm);color:var(--ink)}
+.code .k{color:#7c3aed;font-weight:600}.code .s{color:#15803d}.code .c{color:#8a8a93;font-style:italic}.code .n{color:#c2410c}.code .f{color:#0f766e}
+
+.outcome{margin-top:36px;border-radius:36px;padding:26px 28px;background:var(--smoke);box-shadow:var(--clay),0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.ohead{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.ohead h4{margin:0;font-size:1.35rem}
+.obadge{display:grid;place-items:center;width:42px;height:42px;border-radius:15px;font:800 1.1rem var(--fd)}
+.outcome.is-done .obadge{--accent:#15803d;--accent2:#22c55e}
+.takeaways{list-style:none;padding:0;margin:12px 0 22px;display:grid;gap:12px}
+.takeaways li{position:relative;padding:11px 14px 11px 46px;border-radius:20px;background:var(--smoke);box-shadow:var(--clay-sm);font-size:.97rem}
+.takeaways li::before{content:"✓";position:absolute;left:14px;top:11px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,var(--accent2),var(--accent));color:#fff;font-size:.75rem;font-weight:800;box-shadow:inset 1px 1px 2px rgba(255,255,255,.4)}
+.step-nav{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.grid{stroke:var(--line);stroke-width:1}
+.axis{stroke:var(--line2);stroke-width:1.3}
+.axis.thick{stroke-width:2.2}
+.tick{fill:var(--muted);font:12px var(--fb)}
+.alabel{fill:var(--ink2);font:700 13px var(--fb)}
+.dot{fill:var(--accent);stroke:#fff;stroke-width:1.6;transition:fill .3s}
+.dot.soft{fill:color-mix(in srgb,var(--accent) 65%,white)}
+.dot.flag{fill:var(--orange);stroke:#fff;stroke-width:2;filter:drop-shadow(0 0 6px rgba(234,88,12,.6))}
+.dot.a{fill:var(--teal)} .dot.b{fill:var(--pink)}
+.pick{cursor:pointer}
+.pick:hover{stroke:var(--ink);stroke-width:2}
+.clickable{cursor:crosshair}
+.mk{stroke-width:2.4;stroke-dasharray:5 4}
+.mk.mean{stroke:var(--teal)} .mk.med{stroke:var(--purple)}
+.mklab{font:800 12.5px var(--fb);fill:var(--ink2)}
+.mklab.mean{fill:var(--teal)} .mklab.med{fill:var(--purple)} .mklab.q{fill:var(--accent)}
+.flagtxt{fill:var(--orange)}
+.band{opacity:.15}.band.a{fill:var(--teal)}.band.b{fill:var(--accent)}
+.dev{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3;opacity:.7}
+.bar{fill:url(#bargrad)}
+.bar:hover{filter:brightness(1.08)}
+.bar.soft{fill:color-mix(in srgb,var(--accent) 20%,white);stroke:color-mix(in srgb,var(--accent) 45%,transparent)}
+.kde{fill:none;stroke:var(--orange);stroke-width:3;filter:drop-shadow(0 2px 3px rgba(234,88,12,.35))}
+.trend{stroke:var(--pink);stroke-width:3;stroke-linecap:round;filter:drop-shadow(0 2px 3px rgba(219,39,119,.35))}
+.line{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round;opacity:.85}
+.roll{fill:none;stroke:var(--orange);stroke-width:3.4;stroke-linejoin:round;filter:drop-shadow(0 2px 3px rgba(234,88,12,.4))}
+.vac{fill:var(--orange);opacity:.1}
+.night{fill:#000;opacity:.04}
+.ring{fill:rgba(234,88,12,.08);stroke:var(--orange);stroke-width:2;stroke-dasharray:5 4}
+.hit{fill:transparent;cursor:pointer}
+.dot.sm{stroke-width:1}
+.box{fill:color-mix(in srgb,var(--accent) 16%,white);stroke:var(--accent);stroke-width:2.2}
+.medline{stroke:var(--purple);stroke-width:3}
+.qline{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 4}
+.whisk{stroke:var(--ink2);stroke-width:2}
+.fence{stroke:var(--pink);stroke-width:1.6;stroke-dasharray:6 5}
+.bstep{transition:opacity .45s}
+.bstep.hide{opacity:0}
+.chipg{transition:transform .8s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(4px 4px 5px rgba(160,160,172,.45)) drop-shadow(-3px -3px 4px #fff)}
+.chipg rect{fill:var(--smoke);stroke:none;transition:fill .3s}
+.chipg text{font:800 17px var(--fd);fill:var(--ink)}
+.chipg.med rect{fill:var(--purple)} .chipg.med text{fill:#fff}
+.chipg.q rect{fill:var(--accent)} .chipg.q text{fill:#fff}
+.chipg.out rect{fill:var(--orange)} .chipg.out text{fill:#fff}
+.hm .hcell{cursor:pointer}
+.hm .hcell rect{stroke:var(--smoke);stroke-width:2;transition:filter .2s}
+.hm .hcell:hover rect,.hm .hcell:focus rect{filter:brightness(.95) drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+.hm .hcell.sel rect{stroke:var(--ink);stroke-width:3}
+.hm .hcell:focus{outline:none}
+.hval{font:800 14px var(--fb)}
+.hlab{font:700 12.5px var(--fb);fill:var(--ink2)}
+
+.rbig{border-radius:26px;padding:16px 20px;background:var(--smoke);box-shadow:var(--clay-sm);margin-bottom:16px}
+.rbig span{font-weight:800;color:var(--muted);font-size:.85rem}
+.rbig b{display:block;font:800 3rem/1.05 var(--fd);color:var(--accent)}
+.rbig em{font-style:normal;font-weight:700;color:var(--ink2)}
+.rbig.sm b{font-size:2.2rem}
+.scale{position:relative;margin:8px 4px 28px}
+.scale-bar{height:16px;border-radius:10px;background:linear-gradient(90deg,#2563eb,#fff 50%,#e11d48);box-shadow:var(--clay-in-sm)}
+.scale i{position:absolute;top:-6px;width:10px;height:28px;margin-left:-5px;border-radius:6px;background:var(--ink);box-shadow:2px 2px 5px rgba(0,0,0,.25);transition:left .2s}
+.scale-labels{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-top:4px}
+.guide{list-style:none;padding:0;margin:0 0 12px;display:grid;gap:4px;font-size:.92rem}
+.guide b{display:inline-block;min-width:8em}
+
+.score-pill{font-weight:800;padding:9px 16px;border-radius:999px;color:var(--orange);box-shadow:var(--clay-in-sm)}
+.formula{display:flex;align-items:center;justify-content:center;gap:12px;font:800 1.35rem var(--fd);padding:18px;margin:4px 0 18px;border-radius:26px;background:var(--smoke);box-shadow:var(--clay-in);color:var(--purple)}
+.formula.small-f{font-size:1.05rem;flex-wrap:wrap}
+.frac{display:inline-flex;flex-direction:column;text-align:center;font-size:1.05rem;color:var(--ink)}
+.frac span:first-child{border-bottom:2px solid var(--ink);padding:0 8px 3px}
+.frac span:last-child{padding-top:3px}
+.scen{display:grid;gap:18px;margin:20px 0}
+.case{border-radius:28px;padding:18px 20px;background:var(--smoke);box-shadow:var(--clay-sm);transition:box-shadow .3s}
+.case.right{box-shadow:var(--clay-sm),0 0 0 2.5px color-mix(in srgb,var(--green) 55%,transparent)}
+.case.wrong{box-shadow:var(--clay-sm),0 0 0 2.5px color-mix(in srgb,var(--orange) 55%,transparent)}
+.case-q{display:flex;gap:12px;align-items:flex-start;font-weight:700;margin-bottom:14px}
+.case-n{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:11px;font:800 .9rem var(--fd)}
+.case-opts{display:flex;flex-wrap:wrap;gap:10px}
+.opt{font:700 .92rem/1.25 var(--fb);text-align:left;padding:11px 15px;border-radius:16px;border:0;background:var(--smoke);cursor:pointer;color:var(--ink);box-shadow:var(--clay-sm)}
+.opt:hover:not(:disabled){transform:translateY(-1px)}
+.opt:disabled{cursor:default;opacity:.55}
+.opt.correct{opacity:1;color:var(--green);box-shadow:var(--clay-in-sm),inset 0 0 0 2px color-mix(in srgb,var(--green) 55%,transparent)}
+.opt.picked:not(.correct){opacity:1;color:var(--orange);box-shadow:var(--clay-in-sm),inset 0 0 0 2px color-mix(in srgb,var(--orange) 55%,transparent)}
+.why{margin:14px 0 0;font-size:.95rem}
+
+.progress{display:flex;align-items:center;gap:12px;margin:12px 0}
+.pbar{flex:1;height:14px;border-radius:10px;box-shadow:var(--clay-in-sm);overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s}
+.alerts{list-style:none;padding:0;margin:10px 0;display:grid;gap:12px}
+.alerts li{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:20px;background:var(--smoke);box-shadow:var(--clay-sm)}
+.tag{font-size:.78rem;font-weight:800;padding:4px 10px;border-radius:999px;box-shadow:var(--clay-in-sm);color:var(--ink2)}
+.t-high{color:var(--pink)}.t-missing{color:var(--purple)}.t-zeros{color:var(--orange)}.t-unique{color:var(--green)}
+.vars{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.var{border-radius:24px;padding:14px 16px;background:var(--smoke);box-shadow:var(--clay-sm)}
+.var dl{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:.86rem;margin:8px 0 0}
+.var dt{color:var(--muted)} .var dd{margin:0;font-weight:800}
+.chain{display:grid;gap:14px;margin:12px 0}
+.link{display:flex;gap:14px;align-items:flex-start;padding:14px 18px;border-radius:24px;background:var(--smoke);box-shadow:var(--clay-in-sm);opacity:.6;transition:all .4s}
+.link.show{opacity:1;box-shadow:var(--clay-sm)}
+.link h5{margin:0 0 .15em}.link p{margin:0}
+.ln{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;font:800 .9rem var(--fd)}
+.flow{list-style:none;padding:0;margin:16px 0;display:flex;flex-wrap:wrap;gap:12px;counter-reset:f}
+.flow li{counter-increment:f;display:flex;align-items:center}
+.flow button,.flow span{font:700 .9rem var(--fb);padding:10px 14px;border-radius:16px;border:0;background:var(--smoke);color:var(--ink);cursor:pointer;box-shadow:var(--clay-sm)}
+.flow button::before,.flow span::before{content:counter(f) ". ";color:var(--accent);font-weight:800}
+.flow button:hover{transform:translateY(-1px)}
+.flow .last span{background:linear-gradient(145deg,var(--accent2),var(--accent));color:#fff;cursor:default}
+.flow .last span::before{color:#fff}
+
+.tip{position:fixed;left:0;top:0;z-index:100;pointer-events:none;background:var(--ink);color:#fff;padding:7px 11px;border-radius:12px;font-size:.84rem;opacity:0;transition:opacity .12s;max-width:280px;box-shadow:0 10px 24px -8px rgba(0,0,0,.4)}
+.tip.show{opacity:1}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,140%);z-index:90;width:min(560px,calc(100% - 32px));padding:20px 22px;border-radius:30px;background:var(--smoke);box-shadow:var(--clay),0 0 0 3px rgba(22,163,74,.35);transition:transform .5s cubic-bezier(.2,.8,.2,1),visibility .5s;display:grid;gap:12px;visibility:hidden}
+.toast.show{transform:translate(-50%,0);visibility:visible}
+.toast b{color:var(--green)}
+.toast .btn{justify-self:start}
+footer{max-width:1180px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:.88rem}
+
+@media (max-width:960px){
+  .hero{grid-template-columns:1fr;padding-top:40px}
+  .path{grid-template-columns:1fr}
+  .two,.two.wide-left{grid-template-columns:1fr}
+  .pill span{display:none}
+  .pill{padding:5px}
+}
+@media (max-width:640px){
+  body{font-size:16px}
+  .trio{grid-template-columns:1fr}
+  .step{padding:24px 16px;border-radius:32px}
+  .sim{padding:14px;border-radius:26px}
+  .ring span{display:none}
+  .brand span{display:none}
+  .lhead{gap:14px}
+  .lnum.big{width:54px;height:54px;font-size:1.6rem}
+  input[type=range]{width:140px}
+  .outcome{padding:20px}
+  .facts>div{padding:10px 14px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="bargrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a855f7"/><stop offset="1" stop-color="#7c3aed"/></linearGradient>
+    <linearGradient id="tgrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2f6bff"/><stop offset="1" stop-color="#ff9500"/></linearGradient>
+    <linearGradient id="ringgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16a34a"/><stop offset=".5" stop-color="#7c3aed"/><stop offset="1" stop-color="#ea580c"/></linearGradient>
+  </defs>
+</svg>
+<div class="aura" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+
+<div class="topwrap">
+  <header class="topbar glass" data-acc="1">
+    <div class="brand"><svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="7" cy="21" r="4" fill="#16a34a"/><circle cx="15" cy="13" r="4" fill="#7c3aed"/><circle cx="23" cy="7" r="4" fill="#ea580c"/></svg><span>EDA Lab</span></div>
+    <nav class="pills" id="pills" aria-label="Lessons"></nav>
+    <div class="ring" id="ring"></div>
+  </header>
+</div>
+
+<main>
+  <section class="hero" data-acc="1">
+    <div>
+      <h1>See what your data is trying to tell you</h1>
+      <p class="lede">An interactive lab for Exploratory Data Analysis. Describe data with statistics and pictures, find relationships and patterns, then catch the values that don’t belong.</p>
+      <div class="hero-actions"><button class="btn primary" type="button" data-start>Start lesson 1</button></div>
+      <div class="facts"><div><b>3</b>lessons</div><div><b>15</b>hands-on steps</div><div><b>40</b>students in one dataset</div></div>
+    </div>
+    <div class="heroviz glass">
+      <div class="controls" role="group" aria-label="Ways to look at the class"><button type="button" class="chip" data-hm="raw">Raw data</button><button type="button" class="chip" data-hm="describe">Describe</button><button type="button" class="chip" data-hm="correlate">Correlate</button><button type="button" class="chip" data-hm="detect">Detect</button></div>
+      <div id="hero-svg"></div>
+      <p id="hero-cap" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <h2 class="section-title">Your path through the lab</h2>
+  <div class="path" id="path"></div>
+
+  <section class="lesson" id="lesson"></section>
+</main>
+<footer>EDA Lab by CodePro. Your progress is saved in this browser.</footer>
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+"use strict";
+/* ============ utilities ============ */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+const REDUCE = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss(r) { let u = 0, v = 0; while (u === 0) u = r(); while (v === 0) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const sum = a => a.reduce((s, x) => s + x, 0);
+const mean = a => sum(a) / a.length;
+function quantile(a, p) { const s = [...a].sort((x, y) => x - y); const pos = (s.length - 1) * p; const lo = Math.floor(pos), hi = Math.ceil(pos); return s[lo] + (s[hi] - s[lo]) * (pos - lo); }
+const median = a => quantile(a, 0.5);
+function variance(a, ddof = 1) { const m = mean(a); return sum(a.map(x => (x - m) ** 2)) / (a.length - ddof); }
+const std = (a, ddof = 1) => Math.sqrt(variance(a, ddof));
+function modes(a) { const c = new Map(); a.forEach(v => c.set(v, (c.get(v) || 0) + 1)); let mx = 0; c.forEach(n => { if (n > mx) mx = n; }); if (mx < 2) return []; return [...c].filter(([, n]) => n === mx).map(([v]) => v).sort((x, y) => x - y); }
+function corr(x, y) { const mx = mean(x), my = mean(y); let num = 0, dx = 0, dy = 0; for (let i = 0; i < x.length; i++) { const a = x[i] - mx, b = y[i] - my; num += a * b; dx += a * a; dy += b * b; } return num / Math.sqrt(dx * dy); }
+function linfit(x, y) { const mx = mean(x), my = mean(y); let num = 0, den = 0; for (let i = 0; i < x.length; i++) { num += (x[i] - mx) * (y[i] - my); den += (x[i] - mx) ** 2; } const b = num / den; return { b, a: my - b * mx }; }
+const fmt = (x, d = 2) => Number.isFinite(x) ? x.toFixed(d) : "—";
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const lin = (d0, d1, r0, r1) => v => r0 + (v - d0) / (d1 - d0) * (r1 - r0);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const minus = s => String(s).replace(/-/g, "−");
+function niceTicks(a, b, n = 5) { const span = b - a; const s0 = span / n; const mag = Math.pow(10, Math.floor(Math.log10(s0))); const e = s0 / mag; const step = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag; const out = []; for (let v = Math.ceil(a / step) * step; v <= b + 1e-9; v += step) out.push(+v.toFixed(10)); return out; }
+const store = {
+  get(k, d) { try { const v = window.localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+};
+function strength(r) { const a = Math.abs(r); if (a < 0.1) return "no"; if (a < 0.3) return "weak"; if (a < 0.7) return "moderate"; return "strong"; }
+function strengthLabel(r) { const s = strength(r); if (s === "no") return "No straight-line relationship"; return s[0].toUpperCase() + s.slice(1) + (r > 0 ? " positive" : " negative"); }
+
+/* ============ the class dataset ============ */
+const NAMES = ["Ali", "Sara", "Hamza", "Ayesha", "Bilal", "Fatima", "Usman", "Zainab", "Hassan", "Maryam", "Ahmed", "Hira", "Saad", "Iqra", "Fahad", "Mahnoor", "Danish", "Areeba", "Faraz", "Sana", "Kashif", "Rabia", "Umer", "Noor", "Zeeshan", "Anam", "Talha", "Mehwish", "Waqas", "Laiba", "Imran", "Kiran", "Junaid", "Amna", "Shahzaib", "Komal", "Arsalan", "Hina", "Owais", "Sidra"];
+const DATA = (function () {
+  const r = rng(2024), rows = [], sec = { A: 3, B: 0, C: -5 };
+  for (let i = 0; i < 40; i++) {
+    const section = "ABC"[i % 3];
+    const study = +clamp(1.5 + r() * 6.5, 0.5, 9).toFixed(1);
+    const sleep = +clamp(7 + gauss(r) * 1.0, 4, 10).toFixed(1);
+    const phone = +clamp(6 - study * 0.5 + gauss(r) * 0.9, 0.5, 9).toFixed(1);
+    const att = Math.round(clamp(68 + study * 3.2 + gauss(r) * 6, 40, 100));
+    const score = Math.round(clamp(40 + study * 6.3 + (sleep - 7) * 2.5 - phone * 1.3 + sec[section] + gauss(r) * 6, 15, 98));
+    rows.push({ id: i + 1, name: NAMES[i], section, study_hours: study, sleep_hours: sleep, phone_hours: phone, attendance: att, score });
+  }
+  rows[12].score = 0;          // absent on exam day, recorded as 0
+  rows[26].study_hours = 22;   // typo for 2.2
+  rows[33].sleep_hours = null; // missing
+  rows[18].attendance = null;  // missing
+  return rows;
+})();
+const COLS = ["id", "name", "section", "study_hours", "sleep_hours", "phone_hours", "attendance", "score"];
+const NUM = ["study_hours", "sleep_hours", "phone_hours", "attendance", "score"];
+const LAB = { study_hours: "study hours", sleep_hours: "sleep hours", phone_hours: "phone hours", attendance: "attendance", score: "score" };
+const ANOM_SCORE = DATA[12], ANOM_STUDY = DATA[26];
+const CLEAN = DATA.filter(r => r !== ANOM_SCORE && r !== ANOM_STUDY);
+const colv = (k, rows = DATA) => rows.map(r => r[k]).filter(v => v !== null && v !== undefined);
+function pairs(a, b, rows = CLEAN) { const p = rows.filter(r => r[a] != null && r[b] != null); return { x: p.map(r => r[a]), y: p.map(r => r[b]), rows: p }; }
+function corrMatrix(rows) { return NUM.map(a => NUM.map(b => { const p = pairs(a, b, rows); return corr(p.x, p.y); })); }
+function describe(vals) { const v = vals.filter(x => x != null); return { count: v.length, mean: mean(v), std: std(v), min: Math.min(...v), q1: quantile(v, .25), q2: quantile(v, .5), q3: quantile(v, .75), max: Math.max(...v) }; }
+
+/* ============ shared components ============ */
+function hl(code) {
+  return esc(code).replace(/(#[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|\b(import|from|as|def|return|for|in|if|else|True|False|None|and|or|not|print|lambda)\b|\b(\d+(?:\.\d+)?)\b|\b([A-Za-z_]\w*)(?=\()/g,
+    (m, c, s, k, n, f) => c ? `<span class="c">${c}</span>` : s ? `<span class="s">${s}</span>` : k ? `<span class="k">${k}</span>` : n ? `<span class="n">${n}</span>` : `<span class="f">${f}</span>`);
+}
+function codeBlock(code, title = "Python") { return `<div class="code"><div class="code-head"><span>${title}</span><button class="copy" type="button">Copy code</button></div><pre><code>${hl(code.trim())}</code></pre></div>`; }
+
+function frame(W, H, m, xd, yd) { return { W, H, m, xd, yd, x: lin(xd[0], xd[1], m.l, W - m.r), y: lin(yd[0], yd[1], H - m.b, m.t) }; }
+function axes(p, o = {}) {
+  const xt = o.xt || niceTicks(p.xd[0], p.xd[1], o.nx || 6), yt = o.yt || niceTicks(p.yd[0], p.yd[1], o.ny || 5);
+  const xf = o.xf || (v => minus(v)), yf = o.yf || (v => minus(v));
+  let s = "";
+  if (!o.noY) for (const v of yt) { const Y = p.y(v); s += `<line class="grid" x1="${p.m.l}" x2="${p.W - p.m.r}" y1="${Y}" y2="${Y}"/><text class="tick" x="${p.m.l - 8}" y="${Y + 4}" text-anchor="end">${yf(v)}</text>`; }
+  for (const v of xt) { const X = p.x(v); if (!o.noXGrid) s += `<line class="grid" x1="${X}" x2="${X}" y1="${p.m.t}" y2="${p.H - p.m.b}"/>`; s += `<text class="tick" x="${X}" y="${p.H - p.m.b + 18}" text-anchor="middle">${xf(v)}</text>`; }
+  s += `<line class="axis" x1="${p.m.l}" x2="${p.W - p.m.r}" y1="${p.H - p.m.b}" y2="${p.H - p.m.b}"/>`;
+  if (!o.noY) s += `<line class="axis" x1="${p.m.l}" x2="${p.m.l}" y1="${p.m.t}" y2="${p.H - p.m.b}"/>`;
+  if (o.xl) s += `<text class="alabel" x="${(p.m.l + p.W - p.m.r) / 2}" y="${p.H - 6}" text-anchor="middle">${o.xl}</text>`;
+  if (o.yl) s += `<text class="alabel" transform="translate(15 ${(p.m.t + p.H - p.m.b) / 2}) rotate(-90)" text-anchor="middle">${o.yl}</text>`;
+  return s;
+}
+const svgOpen = (W, H, label = "Chart") => `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">`;
+function svgPoint(svg, e) { const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal; return { x: (e.clientX - r.left) / r.width * vb.width + vb.x, y: (e.clientY - r.top) / r.height * vb.height + vb.y }; }
+
+function dataTable(rows, cols = COLS, clickable = false) {
+  const head = cols.map(c => clickable ? `<th><button type="button" class="colbtn" data-col="${c}">${c}</button></th>` : `<th>${c}</th>`).join("");
+  const body = rows.map((r, i) => `<tr><td class="idx">${DATA.indexOf(r) >= 0 ? DATA.indexOf(r) : i}</td>${cols.map(c => r[c] == null ? `<td class="nan">NaN</td>` : `<td>${r[c]}</td>`).join("")}</tr>`).join("");
+  return `<table class="data"><thead><tr><th class="idx"></th>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+function describeTable(rows = DATA, cols = ["id", ...NUM]) {
+  const d = cols.map(c => describe(colv(c, rows)));
+  const keys = [["count", "count"], ["mean", "mean"], ["std", "std"], ["min", "min"], ["q1", "25%"], ["q2", "50%"], ["q3", "75%"], ["max", "max"]];
+  return `<table class="data desc"><thead><tr><th></th>${cols.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${keys.map(([k, lab]) => `<tr><th>${lab}</th>${d.map((s, i) => `<td class="${cols[i] === "score" && k === "min" ? "hot" : ""}">${fmt(s[k], 2)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+
+/* box plot with dots; returns {svg, stats} */
+function boxPlot(vals, o = {}) {
+  const W = o.W || 680, H = o.H || 190, k = o.k == null ? 1.5 : o.k, d = o.d || [0, 100];
+  const m = { l: 30, r: 30, t: 20, b: 44 };
+  const p = frame(W, H, m, d, [0, 1]);
+  const q1 = quantile(vals, .25), q2 = quantile(vals, .5), q3 = quantile(vals, .75), iqr = q3 - q1;
+  const lo = q1 - k * iqr, hi = q3 + k * iqr;
+  const inside = vals.filter(v => v >= lo && v <= hi);
+  const wl = Math.min(...inside), wh = Math.max(...inside);
+  const by = 50, bh = 46, dy = 128;
+  let s = svgOpen(W, H, o.label || "Box plot") + axes(p, { noY: true, xl: o.xl, noXGrid: true, nx: o.nx || 10 });
+  if (o.fences !== false) s += `<line class="fence" x1="${p.x(clamp(lo, d[0], d[1]))}" x2="${p.x(clamp(lo, d[0], d[1]))}" y1="${by - 18}" y2="${dy + 10}"/><line class="fence" x1="${p.x(clamp(hi, d[0], d[1]))}" x2="${p.x(clamp(hi, d[0], d[1]))}" y1="${by - 18}" y2="${dy + 10}"/>` +
+    (lo >= d[0] ? `<text class="tick" x="${p.x(lo)}" y="${by - 22}" text-anchor="middle">lower fence ${fmt(lo, 1)}</text>` : "") + (hi <= d[1] ? `<text class="tick" x="${p.x(hi)}" y="${by - 22}" text-anchor="middle">upper fence ${fmt(hi, 1)}</text>` : "");
+  s += `<line class="whisk" x1="${p.x(wl)}" x2="${p.x(q1)}" y1="${by + bh / 2}" y2="${by + bh / 2}"/><line class="whisk" x1="${p.x(q3)}" x2="${p.x(wh)}" y1="${by + bh / 2}" y2="${by + bh / 2}"/>`;
+  s += `<line class="whisk" x1="${p.x(wl)}" x2="${p.x(wl)}" y1="${by + 12}" y2="${by + bh - 12}"/><line class="whisk" x1="${p.x(wh)}" x2="${p.x(wh)}" y1="${by + 12}" y2="${by + bh - 12}"/>`;
+  s += `<rect class="box" x="${p.x(q1)}" y="${by}" width="${Math.max(1, p.x(q3) - p.x(q1))}" height="${bh}" rx="8"/><line class="medline" x1="${p.x(q2)}" x2="${p.x(q2)}" y1="${by}" y2="${by + bh}"/>`;
+  const out = [];
+  vals.forEach((v, i) => {
+    const isOut = v < lo || v > hi; if (isOut) out.push(i);
+    const jy = dy + ((i * 37) % 5 - 2) * 5;
+    const tip = o.names ? `${o.names[i]}: ${v}` : `${v}`;
+    s += `<circle class="${isOut ? "dot flag" : "dot soft"}" cx="${p.x(clamp(v, d[0], d[1]))}" cy="${jy}" r="${isOut ? 6 : 4.5}" data-tip="${tip}${isOut ? " (outside the fences)" : ""}"/>`;
+  });
+  s += "</svg>";
+  return { svg: s, q1, q2, q3, iqr, lo, hi, out };
+}
+
+/* heatmap */
+function divColor(v) {
+  const t = clamp(Math.abs(v), 0, 1);
+  const c = v >= 0 ? [225, 29, 72] : [37, 99, 235];
+  const w = [255, 255, 255];
+  const mix = w.map((x, i) => Math.round(x + (c[i] - x) * t));
+  return `rgb(${mix.join(",")})`;
+}
+function heatmap(M, labels, o = {}) {
+  const n = labels.length, cell = o.cell || 78, L = o.left || 112, T = o.top || 10;
+  const W = L + n * cell + 10, H = T + n * cell + 90;
+  let s = svgOpen(W, H, "Correlation heatmap");
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+    const v = M[i][j], x = L + j * cell, y = T + i * cell;
+    s += `<g class="hcell${o.sel && o.sel[0] === i && o.sel[1] === j ? " sel" : ""}" data-i="${i}" data-j="${j}" tabindex="0" role="button" aria-label="${labels[i]} and ${labels[j]}: r = ${fmt(v)}"><rect x="${x + 2}" y="${y + 2}" width="${cell - 4}" height="${cell - 4}" rx="10" fill="${divColor(v)}"/><text x="${x + cell / 2}" y="${y + cell / 2 + 5}" text-anchor="middle" class="hval" fill="${Math.abs(v) > 0.55 ? "#fff" : "#1b1f3b"}">${minus(fmt(v))}</text></g>`;
+  }
+  labels.forEach((lab, i) => { s += `<text class="hlab" x="${L - 10}" y="${T + i * cell + cell / 2 + 5}" text-anchor="end">${lab}</text><text class="hlab" text-anchor="end" transform="translate(${L + i * cell + cell / 2 + 4} ${T + n * cell + 10}) rotate(-35)">${lab}</text>`; });
+  s += "</svg>";
+  return s;
+}
+/* ================= LESSON 1 ================= */
+const COLINFO = {
+  id: { kind: "Identifier", meaning: "A number we gave each student. It labels a row; it doesn’t measure anything, so we never average it.", q: "Which student is this?" },
+  name: { kind: "Text (categorical)", meaning: "The student’s first name. Text columns are read, counted or grouped, not added up.", q: "Who is the student?" },
+  section: { kind: "Categorical", meaning: "The class section: A, B or C. Categories are counted and compared, never averaged.", q: "How many students are in each section? Does one section score higher?" },
+  study_hours: { kind: "Numeric (continuous)", meaning: "Hours studied per day. Continuous means it can take any value in a range, like 2.5 or 3.7.", q: "How much does a typical student study? Do students who study more score more?" },
+  sleep_hours: { kind: "Numeric (continuous)", meaning: "Hours of sleep per night. One student’s value is missing.", q: "Do students get enough sleep?" },
+  phone_hours: { kind: "Numeric (continuous)", meaning: "Hours of phone screen time per day.", q: "Is heavy phone use linked to lower scores?" },
+  attendance: { kind: "Numeric (discrete %)", meaning: "Percentage of classes attended. One student’s value is missing.", q: "Do students who attend more score higher?" },
+  score: { kind: "Numeric (discrete)", meaning: "Final exam score out of 100. This is the column we most want to understand.", q: "What is a typical score? Who did unusually well or badly?" }
+};
+function infoOut() {
+  const types = { id: "int64", name: "object", section: "object", study_hours: "float64", sleep_hours: "float64", phone_hours: "float64", attendance: "float64", score: "int64" };
+  let s = `&lt;class 'pandas.core.frame.DataFrame'&gt;\nRangeIndex: 40 entries, 0 to 39\nData columns (total 8 columns):\n #   Column        Non-Null Count  Dtype\n---  ------        --------------  -----\n`;
+  COLS.forEach((c, i) => { const nn = DATA.filter(r => r[c] != null).length; s += ` ${i}   ${c.padEnd(13)} ${(nn + " non-null").padEnd(15)} ${types[c]}\n`; });
+  s += "dtypes: float64(4), int64(2), object(2)";
+  return `<pre class="out">${s}</pre><p class="note">Spot it: <b>sleep_hours</b> and <b>attendance</b> have 39 non-null values, so each is missing one. <b>attendance</b> holds whole numbers but shows float64, because pandas stores a missing number as NaN, and NaN is a float.</p>`;
+}
+
+const S11 = {
+  t: "Meet the dataset",
+  intro: "EDA starts by simply looking. Before any maths, we find out what each row is, what each column means and what kind of values each column holds.",
+  body: () => `
+  <div class="concept"><h4>What is EDA?</h4><p>Exploratory Data Analysis is the detective stage of working with data. We look at the data from many angles to understand it <em>before</em> we write a report or train a model. A doctor works the same way: temperature, pulse and blood pressure come before any treatment.</p></div>
+  <div class="two">
+    <div><p>Our dataset describes <strong>40 students</strong> from one class. Each <strong>row</strong> is one student (an observation). Each <strong>column</strong> is one thing we measured (a variable).</p><p>Click any column name in the table to see what it holds and what kind of data it is.</p></div>
+    <div class="colinfo" id="colinfo"><p class="muted">Pick a column name in the table below.</p></div>
+  </div>
+  <div class="tablewrap">${dataTable(DATA.slice(0, 8), COLS, true)}</div>
+  <p class="small muted">Showing the first 8 of 40 rows. The grey numbers on the left are pandas’ row index, which starts at 0.</p>
+  <h4 class="sub">Run your first pandas commands</h4>
+  <p>These four commands give the dataset’s ID card. Click each one and read the output.</p>
+  <div id="con"></div>`,
+  init(root) {
+    const info = $("#colinfo", root);
+    root.addEventListener("click", e => {
+      const b = e.target.closest(".colbtn"); if (!b) return;
+      $$(".colbtn", root).forEach(x => x.classList.toggle("on", x === b));
+      const c = b.dataset.col, ci = COLINFO[c];
+      const sample = DATA.slice(0, 5).map(r => r[c] == null ? "NaN" : r[c]).join(", ");
+      info.innerHTML = `<div class="badge">${ci.kind}</div><h5>${c}</h5><p>${ci.meaning}</p><p class="small"><b>First values:</b> ${sample}</p><p class="small"><b>Questions it can answer:</b> ${ci.q}</p>`;
+    });
+    consoleSim($("#con", root), [
+      { cmd: "df.shape", out: () => `<pre class="out">(40, 8)</pre><p class="note">40 rows (students) and 8 columns (variables). Note there are no brackets after shape: it’s a property, not a function.</p>` },
+      { cmd: "df.head()", out: () => `<div class="tablewrap">${dataTable(DATA.slice(0, 5))}</div><p class="note">The first 5 rows. Use <b>df.tail()</b> for the last 5, or <b>df.sample(5)</b> for 5 random rows.</p>` },
+      { cmd: "df.info()", out: infoOut },
+      { cmd: "df.isna().sum()", out: () => `<pre class="out">${COLS.map(c => c.padEnd(14) + DATA.filter(r => r[c] == null).length).join("\n")}\ndtype: int64</pre><p class="note">Two missing values in total. We’ll keep them in mind instead of ignoring them.</p>` }
+    ]);
+  },
+  code: `import pandas as pd
+
+df = pd.read_csv("students.csv")   # load the data
+df.shape          # (rows, columns)
+df.head()         # first 5 rows
+df.info()         # column types and missing values
+df.isna().sum()   # missing values per column`,
+  outcome: "You loaded a dataset and read its ID card: 40 students, 8 columns, two kinds of columns and two missing values to keep in mind.",
+  take: ["Each row is one observation (a student); each column is one variable (something measured).", "Numeric columns can be averaged; categorical columns are counted and grouped.", "df.info() reveals data types and missing values at once, which is why it’s one of the first commands we run."]
+};
+
+const S12 = {
+  t: "The centre: mean, median and mode",
+  intro: "If you had to describe a whole column with one number, which number would you choose? There are three popular answers, and they don’t always agree.",
+  body: () => `
+  <div class="trio">
+    <div class="mini"><h5>Mean</h5><p>Add all values and divide by how many there are. Picture the dots as weights on a ruler: the mean is where the ruler balances.</p></div>
+    <div class="mini"><h5>Median</h5><p>Sort the values and take the middle one. Half the values sit below it and half above.</p></div>
+    <div class="mini"><h5>Mode</h5><p>The value that appears most often. It’s most useful for categories, such as the most common section.</p></div>
+  </div>
+  <div class="sim">
+    <div class="sim-head"><h4>Centre simulator</h4><p>These are 8 test scores. Click on the line to add a score; click a dot to remove it. Watch which marker moves more.</p></div>
+    <div id="cl-svg" class="clickable"></div>
+    <div class="controls"><button class="btn" data-a="low" type="button">Add an absent student (score 5)</button><button class="btn" data-a="high" type="button">Add a top scorer (99)</button><button class="btn ghost" data-a="reset" type="button">Reset</button></div>
+    <div class="stats" id="cl-read"></div>
+    <div class="insight" id="cl-insight" aria-live="polite"></div>
+  </div>`,
+  init(root) {
+    const START = [62, 70, 71, 75, 78, 80, 80, 88];
+    let vals = [...START];
+    const host = $("#cl-svg", root), W = 680, H = 210, m = { l: 30, r: 30, t: 46, b: 44 };
+    const p = frame(W, H, m, [0, 100], [0, 1]);
+    function draw() {
+      const mu = mean(vals), md = median(vals), mo = modes(vals), base = H - m.b;
+      let s = svgOpen(W, H, "Number line of scores with mean and median markers") + `<rect x="${m.l}" y="0" width="${W - m.l - m.r}" height="${H - 8}" fill="transparent"/>`;
+      for (let v = 0; v <= 100; v += 10) s += `<line class="axis" x1="${p.x(v)}" x2="${p.x(v)}" y1="${base}" y2="${base + 6}"/><text class="tick" x="${p.x(v)}" y="${base + 22}" text-anchor="middle">${v}</text>`;
+      s += `<line class="axis thick" x1="${m.l}" x2="${W - m.r}" y1="${base}" y2="${base}"/>`;
+      const close = Math.abs(p.x(mu) - p.x(md)) < 70;
+      s += `<line class="mk mean" x1="${p.x(mu)}" x2="${p.x(mu)}" y1="22" y2="${base}"/><text class="mklab mean" x="${p.x(mu)}" y="16" text-anchor="middle">mean ${fmt(mu, 1)}</text>`;
+      s += `<line class="mk med" x1="${p.x(md)}" x2="${p.x(md)}" y1="${close ? 40 : 22}" y2="${base}"/><text class="mklab med" x="${p.x(md)}" y="${close ? 36 : 16}" text-anchor="middle">median ${fmt(md, 1)}</text>`;
+      const seen = {};
+      vals.forEach((v, i) => { seen[v] = (seen[v] || 0) + 1; s += `<circle class="dot pick" data-i="${i}" cx="${p.x(v)}" cy="${base - 12 - (seen[v] - 1) * 17}" r="7.5" data-tip="${v}: click to remove"/>`; });
+      host.innerHTML = s + "</svg>";
+      const sorted = [...vals].sort((a, b) => a - b), n = sorted.length;
+      const mid = n % 2 ? [Math.floor(n / 2)] : [n / 2 - 1, n / 2];
+      const sumExpr = n <= 10 ? vals.join(" + ") : `${vals.slice(0, 3).join(" + ")} + … + ${vals[n - 1]}`;
+      $("#cl-read", root).innerHTML = `
+        <div class="stat mean"><span>Mean</span><b>${fmt(mu, 1)}</b><p>(${sumExpr}) ÷ ${n} = ${fmt(sum(vals), 0)} ÷ ${n}</p></div>
+        <div class="stat med"><span>Median</span><b>${fmt(md, 1)}</b><p class="chips-row">${sorted.map((v, i) => `<i class="${mid.includes(i) ? "on" : ""}">${v}</i>`).join("")}</p><p>${n % 2 ? "Odd count: the middle value." : "Even count: average of the two middle values."}</p></div>
+        <div class="stat"><span>Mode</span><b>${mo.length ? mo.join(", ") : "none"}</b><p>${mo.length ? "Appears most often." : "No value repeats, so there’s no mode."}</p></div>`;
+      const diff = mu - md;
+      $("#cl-insight", root).innerHTML = Math.abs(diff) < 2
+        ? `<b>Mean and median agree.</b> The scores are balanced around the centre, so either number describes a typical student well.`
+        : `<b>The mean is ${fmt(Math.abs(diff), 1)} points ${diff < 0 ? "below" : "above"} the median.</b> ${diff < 0 ? "A very low" : "A very high"} value is pulling the mean towards it, while the median barely moved. Here the median describes a typical student better.`;
+    }
+    host.addEventListener("click", e => {
+      const dot = e.target.closest("[data-i]");
+      if (dot) { if (vals.length > 1) vals.splice(+dot.dataset.i, 1); draw(); return; }
+      const svg = host.querySelector("svg"); if (!svg) return;
+      const pt = svgPoint(svg, e); if (pt.x < m.l - 6 || pt.x > W - m.r + 6) return;
+      vals.push(Math.round(clamp((pt.x - m.l) / (W - m.l - m.r) * 100, 0, 100))); draw();
+    });
+    $$("[data-a]", root).forEach(b => b.addEventListener("click", () => { const a = b.dataset.a; if (a === "low") vals.push(5); if (a === "high") vals.push(99); if (a === "reset") vals = [...START]; draw(); }));
+    draw();
+  },
+  code: `scores = df["score"]
+scores.mean()     # sum ÷ count
+scores.median()   # middle value after sorting
+scores.mode()     # most frequent value(s)`,
+  outcome: "You measured the centre of the data in three ways and saw with your own clicks that one extreme value drags the mean but hardly moves the median.",
+  take: ["Mean = sum ÷ count. It uses every value, so extreme values pull it.", "Median = the middle of the sorted list. It’s robust: extreme values barely move it.", "When mean and median are far apart, the data is skewed or has outliers, and the median is the safer summary."]
+};
+
+const S13 = {
+  t: "The spread: range, variance and standard deviation",
+  intro: "Two classes can have the same average and still be very different. Spread tells us how far the values wander from the centre.",
+  body: () => `
+  <p>Class A and Class B both average about 70. Use the slider to change how scattered Class B is. Each dashed line shows how far one student is from the class mean.</p>
+  <div class="sim">
+    <div id="sp-svg"></div>
+    <div class="controls">
+      <label class="range">Spread of Class B <input id="sp-s" type="range" min="2" max="16" step="0.5" value="10"><output id="sp-o">10</output></label>
+      <label class="check"><input id="sp-band" type="checkbox" checked> Show mean ± 1 standard deviation</label>
+    </div>
+    <div class="tablewrap"><table class="data" id="sp-tab"></table></div>
+  </div>
+  <h4 class="sub">How Class B’s standard deviation is calculated</h4>
+  <p>The standard deviation is built in four small steps. Move the slider above and watch every number update.</p>
+  <div class="tablewrap"><table class="data calc" id="sp-calc"></table></div>
+  <p class="small muted">Pandas divides by n − 1 rather than n. It’s a small correction for working with a sample. For now, read variance as “the average squared distance from the mean”.</p>`,
+  init(root) {
+    const base = [-1.7, -1.0, -0.6, -0.3, 0, 0.1, 0.4, 0.8, 1.0, 1.3];
+    const bm = mean(base), bs = std(base); const z = base.map(v => (v - bm) / bs);
+    const W = 680, H = 250, m = { l: 80, r: 24, t: 20, b: 40 }, p = frame(W, H, m, [30, 100], [0, 1]);
+    const rows = [{ name: "Class A", y: 70, cls: "a" }, { name: "Class B", y: 165, cls: "b" }];
+    function draw() {
+      const sB = +$("#sp-s", root).value; $("#sp-o", root).textContent = sB;
+      const A = z.map(v => Math.round(clamp(70 + 4 * v, 0, 100))), B = z.map(v => Math.round(clamp(70 + sB * v, 0, 100)));
+      const sets = [A, B], band = $("#sp-band", root).checked;
+      let s = svgOpen(W, H, "Two classes with deviations from the mean") + axes(p, { noY: true, nx: 7, noXGrid: true, xl: "Score" });
+      rows.forEach((r, k) => {
+        const v = sets[k], mu = mean(v), sd = std(v);
+        if (band) s += `<rect class="band ${r.cls}" x="${p.x(mu - sd)}" y="${r.y - 34}" width="${p.x(mu + sd) - p.x(mu - sd)}" height="68" rx="12"/>`;
+        s += `<text class="alabel" x="${m.l - 12}" y="${r.y + 5}" text-anchor="end">${r.name}</text>`;
+        s += `<line class="mk mean" x1="${p.x(mu)}" x2="${p.x(mu)}" y1="${r.y - 38}" y2="${r.y + 38}"/>`;
+        v.forEach((x, i) => { const y = r.y + ((i % 3) - 1) * 16; s += `<line class="dev" x1="${p.x(mu)}" x2="${p.x(x)}" y1="${y}" y2="${y}"/><circle class="dot ${r.cls}" cx="${p.x(x)}" cy="${y}" r="6.5" data-tip="${x} (${x - mu >= 0 ? "+" : "−"}${fmt(Math.abs(x - mu), 1)} from the mean)"/>`; });
+      });
+      $("#sp-svg", root).innerHTML = s + "</svg>";
+      $("#sp-tab", root).innerHTML = `<thead><tr><th></th><th>Mean</th><th>Range (max − min)</th><th>Variance</th><th>Standard deviation</th></tr></thead><tbody>${rows.map((r, k) => { const v = sets[k]; return `<tr><th>${r.name}</th><td>${fmt(mean(v), 1)}</td><td>${Math.max(...v)} − ${Math.min(...v)} = ${Math.max(...v) - Math.min(...v)}</td><td>${fmt(variance(v), 1)}</td><td><b>${fmt(std(v), 1)}</b></td></tr>`; }).join("")}</tbody>`;
+      const mu = mean(B), devs = B.map(x => x - mu), sq = devs.map(d => d * d), ss = sum(sq);
+      $("#sp-calc", root).innerHTML = `<thead><tr><th>Score</th><th>1. Distance from mean (score − ${fmt(mu, 1)})</th><th>2. Squared distance</th></tr></thead><tbody>${B.map((x, i) => `<tr><td>${x}</td><td>${minus(fmt(devs[i], 1))}</td><td>${fmt(sq[i], 1)}</td></tr>`).join("")}</tbody><tfoot><tr><td colspan="3">3. Variance = sum of squares ÷ (n − 1) = ${fmt(ss, 1)} ÷ 9 = <b>${fmt(ss / 9, 1)}</b><br>4. Standard deviation = √variance = √${fmt(ss / 9, 1)} = <b>${fmt(Math.sqrt(ss / 9), 1)} points</b></td></tr></tfoot>`;
+    }
+    $("#sp-s", root).addEventListener("input", draw); $("#sp-band", root).addEventListener("change", draw); draw();
+  },
+  code: `scores.max() - scores.min()      # range
+scores.var()                     # variance
+scores.std()                     # standard deviation (same units as the data)
+scores.quantile([0.25, 0.75])    # quartiles, used for the IQR later`,
+  outcome: "You compared two classes with the same mean and saw that spread is the missing half of the story. You also calculated a standard deviation row by row.",
+  take: ["Range = max − min. It’s simple, but decided by only two values.", "Squaring the distances makes them all positive, so values above and below the mean don’t cancel out.", "Standard deviation ≈ the typical distance from the mean, in the same units as the data. Small std: values huddle together; large std: values are scattered."]
+};
+
+const SHAPES = {
+  normal: { name: "Bell-shaped (normal)", ex: "Heights of adults, measurement errors, many exam scores.", read: "Values pile up in the middle and thin out evenly on both sides. Mean and median sit almost on top of each other.", gen: r => 60 + 12 * gauss(r) },
+  right: { name: "Right-skewed", ex: "Household income, daily phone use, house prices.", read: "Most values are small, with a long tail stretching right. The few large values pull the mean to the right of the median.", gen: r => 12 + 16 * -Math.log(1 - r()) },
+  left: { name: "Left-skewed", ex: "Scores on a very easy test, age at retirement.", read: "Most values are high, with a tail stretching left. The mean is pulled below the median.", gen: r => 96 - 14 * -Math.log(1 - r()) },
+  bimodal: { name: "Two peaks (bimodal)", ex: "Scores of two classes mixed together, rush-hour traffic.", read: "Two humps usually mean two different groups are mixed in one column. The mean lands in the valley where few values actually are. Split the groups and look again.", gen: r => r() < 0.5 ? 40 + 7 * gauss(r) : 78 + 7 * gauss(r) }
+};
+const S14 = {
+  t: "Histograms: seeing the shape",
+  intro: "Numbers summarise, pictures reveal. A histogram splits the number line into equal ranges called bins and draws a bar for how many values fall into each one.",
+  body: () => `
+  <div class="sim">
+    <div class="controls" role="group" aria-label="Data shape">${Object.entries(SHAPES).map(([k, v], i) => `<button type="button" class="chip${i === 0 ? " on" : ""}" data-shape="${k}">${v.name}</button>`).join("")}</div>
+    <div id="hi-svg"></div>
+    <div class="controls">
+      <label class="range">Number of bins <input id="hi-b" type="range" min="3" max="40" step="1" value="12"><output id="hi-bo">12</output></label>
+      <label class="check"><input id="hi-k" type="checkbox"> Smooth curve (KDE)</label>
+    </div>
+    <div class="two"><div class="insight" id="hi-read"></div><div class="insight soft" id="hi-bins"></div></div>
+  </div>`,
+  init(root) {
+    let shape = "normal", vals = [];
+    const W = 680, H = 300, m = { l: 48, r: 20, t: 34, b: 44 };
+    function gen() { const r = rng({ normal: 11, right: 12, left: 13, bimodal: 14 }[shape]); vals = Array.from({ length: 400 }, () => clamp(SHAPES[shape].gen(r), 0, 100)); }
+    function draw() {
+      const nb = +$("#hi-b", root).value; $("#hi-bo", root).textContent = nb;
+      const bw = 100 / nb, counts = new Array(nb).fill(0);
+      vals.forEach(v => counts[Math.min(nb - 1, Math.floor(v / bw))]++);
+      const mx = Math.max(...counts), p = frame(W, H, m, [0, 100], [0, mx * 1.15]);
+      let s = svgOpen(W, H, "Histogram") + axes(p, { nx: 10, ny: 4, xl: "Value", yl: "Count", noXGrid: true });
+      counts.forEach((c, i) => { s += `<rect class="bar" x="${p.x(i * bw) + 1}" y="${p.y(c)}" width="${Math.max(1, p.x(bw) - p.x(0) - 2)}" height="${p.y(0) - p.y(c)}" rx="3" data-tip="${fmt(i * bw, 1)} to ${fmt((i + 1) * bw, 1)}: ${c} values"/>`; });
+      if ($("#hi-k", root).checked) {
+        const sd = std(vals), h = 1.06 * sd * Math.pow(vals.length, -0.2); let d = "";
+        for (let k = 0; k <= 140; k++) { const x = k / 140 * 100; let dens = 0; for (const v of vals) dens += Math.exp(-0.5 * ((x - v) / h) ** 2); dens = dens / (vals.length * h * Math.sqrt(2 * Math.PI)); d += (k ? "L" : "M") + p.x(x).toFixed(1) + "," + p.y(dens * vals.length * bw).toFixed(1); }
+        s += `<path class="kde" d="${d}"/>`;
+      }
+      const mu = mean(vals), md = median(vals), close = Math.abs(p.x(mu) - p.x(md)) < 80;
+      s += `<line class="mk mean" x1="${p.x(mu)}" x2="${p.x(mu)}" y1="${m.t - 6}" y2="${H - m.b}"/><text class="mklab mean" x="${p.x(mu)}" y="${m.t - 12}" text-anchor="${close && mu < md ? "end" : close ? "start" : "middle"}">mean ${fmt(mu, 1)}</text>`;
+      s += `<line class="mk med" x1="${p.x(md)}" x2="${p.x(md)}" y1="${m.t - 6}" y2="${H - m.b}"/><text class="mklab med" x="${p.x(md)}" y="${m.t - 12 + (close ? 0 : 0)}" text-anchor="${close && md <= mu ? "end" : close ? "start" : "middle"}">median ${fmt(md, 1)}</text>`;
+      $("#hi-svg", root).innerHTML = s + "</svg>";
+      const S = SHAPES[shape];
+      $("#hi-read", root).innerHTML = `<b>${S.name}.</b> ${S.read}<br><span class="small">Real examples: ${S.ex}</span>`;
+      $("#hi-bins", root).innerHTML = `<b>${nb} bins:</b> each bar covers a range of ${fmt(bw, 1)} points. ${nb < 6 ? "So few bins hide the shape; details get lumped together." : nb > 25 ? "So many bins make the picture noisy; random bumps look like patterns." : "This is a sensible middle ground."}`;
+    }
+    $$("[data-shape]", root).forEach(b => b.addEventListener("click", () => { shape = b.dataset.shape; $$("[data-shape]", root).forEach(x => x.classList.toggle("on", x === b)); gen(); draw(); }));
+    $("#hi-b", root).addEventListener("input", draw); $("#hi-k", root).addEventListener("change", draw);
+    gen(); draw();
+  },
+  code: `import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.hist(df["score"], bins=10)                       # Matplotlib
+sns.histplot(data=df, x="score", bins=10, kde=True)  # Seaborn, with a smooth curve
+plt.show()`,
+  outcome: "You drew histograms for four kinds of data and learned to read their shape. You also saw how the number of bins changes what the picture tells you.",
+  take: ["Bell shape: mean ≈ median, values balanced around the centre.", "Right-skewed: long tail to the right, mean to the right of the median. Left-skewed is the mirror image.", "Two peaks usually mean two groups are mixed. Split them and look again.", "Too few bins hide detail; too many create noise. Try a few values."]
+};
+
+const S15 = {
+  t: "Box plots and describe(): the five-number summary",
+  intro: "A box plot squeezes a whole column into five numbers and points out unusual values. We’ll build one by hand, then let pandas do it for the whole dataset.",
+  body: () => `
+  <div class="sim">
+    <div class="sim-head"><h4>Box plot builder</h4><p id="bx-text" aria-live="polite"></p></div>
+    <div id="bx-svg"></div>
+    <div class="controls"><button class="btn ghost" id="bx-prev" type="button">Back</button><button class="btn primary" id="bx-next" type="button">Next build step</button><span class="muted small" id="bx-count"></span></div>
+  </div>
+  <h4 class="sub">Now the real dataset</h4>
+  <p>One command, <b>df.describe()</b>, gives the count, mean, standard deviation and the five-number summary for every numeric column.</p>
+  <div class="tablewrap">${describeTable()}</div>
+  <p class="small muted"><b>id</b> appears because it’s stored as a number, but its statistics mean nothing. Always ask whether a statistic makes sense for a column.</p>
+  <div id="bx-real"></div>
+  <div class="insight warn">Look at the highlighted cell: the minimum score is <b>0</b>, far below every other score. Someone scoring zero is suspicious. We’ll investigate it in Lesson 3.</div>`,
+  init(root) {
+    const raw = [65, 30, 72, 58, 96, 62, 75, 55, 68], sorted = [...raw].sort((a, b) => a - b);
+    const TXT = [
+      "Here are 9 exam scores in the order we collected them. Hard to see anything, right? Press Next build step.",
+      "1. Sort the values from smallest to largest. Everything in a box plot depends on this order.",
+      "2. Find the median, the middle value. With 9 values the 5th one is in the middle: 65. Half the scores are below it and half above.",
+      "3. Find Q1, the first quartile: 25% of the data lies below it. Here Q1 = 58. (Pandas calculates quartiles by position; with 9 values Q1 lands exactly on the 3rd value.)",
+      "4. Find Q3, the third quartile: 75% of the data lies below it. Here Q3 = 72.",
+      "5. Draw a box from Q1 to Q3. Its width is the interquartile range: IQR = Q3 − Q1 = 72 − 58 = 14. The box holds the middle 50% of scores.",
+      "6. Build fences 1.5 × IQR beyond the box: 58 − 21 = 37 and 72 + 21 = 93. The final plot doesn’t show them, but they decide what counts as unusual.",
+      "7. Draw whiskers to the furthest values still inside the fences (55 and 75). Values outside, 30 and 96, become separate dots: outliers. Done!"
+    ];
+    const W = 680, H = 310, cx0 = (W - 9 * 64) / 2, ax = lin(20, 100, 40, W - 30), AY = 270, BY = 170;
+    let st = 0;
+    let s = svgOpen(W, H, "Box plot builder");
+    for (let v = 20; v <= 100; v += 10) s += `<line class="axis" x1="${ax(v)}" x2="${ax(v)}" y1="${AY}" y2="${AY + 6}"/><text class="tick" x="${ax(v)}" y="${AY + 22}" text-anchor="middle">${v}</text>`;
+    s += `<line class="axis thick" x1="${ax(20)}" x2="${ax(100)}" y1="${AY}" y2="${AY}"/>`;
+    s += `<g class="bstep" data-from="6"><line class="fence" x1="${ax(37)}" x2="${ax(37)}" y1="${BY - 50}" y2="${AY}"/><line class="fence" x1="${ax(93)}" x2="${ax(93)}" y1="${BY - 50}" y2="${AY}"/><text class="tick" x="${ax(37)}" y="${BY - 56}" text-anchor="middle">fence 37</text><text class="tick" x="${ax(93)}" y="${BY - 56}" text-anchor="middle">fence 93</text></g>`;
+    s += `<g class="bstep" data-from="5"><rect class="box" x="${ax(58)}" y="${BY - 28}" width="${ax(72) - ax(58)}" height="56" rx="8"/><text class="tick" x="${(ax(58) + ax(72)) / 2}" y="${BY + 46}" text-anchor="middle">IQR = 14</text></g>`;
+    s += `<g class="bstep" data-from="7"><line class="whisk" x1="${ax(55)}" x2="${ax(58)}" y1="${BY}" y2="${BY}"/><line class="whisk" x1="${ax(72)}" x2="${ax(75)}" y1="${BY}" y2="${BY}"/><line class="whisk" x1="${ax(55)}" x2="${ax(55)}" y1="${BY - 14}" y2="${BY + 14}"/><line class="whisk" x1="${ax(75)}" x2="${ax(75)}" y1="${BY - 14}" y2="${BY + 14}"/><circle class="dot flag" cx="${ax(30)}" cy="${BY}" r="7"/><circle class="dot flag" cx="${ax(96)}" cy="${BY}" r="7"/><text class="tick" x="${ax(30)}" y="${BY - 14}" text-anchor="middle">outlier</text><text class="tick" x="${ax(96)}" y="${BY - 14}" text-anchor="middle">outlier</text></g>`;
+    [["2", 65, "median"], ["3", 58, "Q1"], ["4", 72, "Q3"]].forEach(([f, v, lab]) => { s += `<g class="bstep" data-from="${f}"><line class="${lab === "median" ? "medline" : "qline"}" x1="${ax(v)}" x2="${ax(v)}" y1="${BY - 28}" y2="${AY}"/><text class="mklab ${lab === "median" ? "med" : "q"}" x="${ax(v)}" y="${lab === "median" ? BY - 36 : AY - 8}" text-anchor="middle">${lab} ${v}</text></g>`; });
+    raw.forEach(v => { s += `<circle class="dot soft bstep" data-from="1" cx="${ax(v)}" cy="${AY}" r="5"/>`; });
+    raw.forEach(v => { s += `<g class="chipg" data-v="${v}"><rect width="54" height="40" rx="12"/><text x="27" y="26" text-anchor="middle">${v}</text></g>`; });
+    $("#bx-svg", root).innerHTML = s + "</svg>";
+    function upd() {
+      $$(".bstep", root).forEach(g => g.classList.toggle("hide", st < +g.dataset.from));
+      $$(".chipg", root).forEach(g => {
+        const v = +g.dataset.v, idx = st >= 1 ? sorted.indexOf(v) : raw.indexOf(v);
+        g.style.transform = `translate(${cx0 + idx * 64 + 5}px, 22px)`;
+        g.classList.toggle("med", st >= 2 && v === 65); g.classList.toggle("q", (st >= 3 && v === 58) || (st >= 4 && v === 72)); g.classList.toggle("out", st >= 7 && (v === 30 || v === 96));
+      });
+      $("#bx-text", root).textContent = TXT[st]; $("#bx-count", root).textContent = `Build step ${st} of 7`;
+      $("#bx-prev", root).disabled = st === 0; $("#bx-next", root).textContent = st === 7 ? "Start again" : "Next build step";
+    }
+    $("#bx-next", root).addEventListener("click", () => { st = st === 7 ? 0 : st + 1; upd(); });
+    $("#bx-prev", root).addEventListener("click", () => { st = Math.max(0, st - 1); upd(); });
+    upd();
+    const b = boxPlot(colv("score"), { xl: "Exam score (all 40 students)", names: DATA.map(r => r.name), label: "Box plot of exam scores" });
+    $("#bx-real", root).innerHTML = `<div class="sim"><div class="sim-head"><h4>Box plot of the class’s exam scores</h4><p>Hover over the dots to see each student. Each dot below the box is one student.</p></div>${b.svg}</div>`;
+  },
+  code: `df.describe()                                    # count, mean, std, min, quartiles, max
+sns.boxplot(data=df, x="score")                  # one box plot
+sns.boxplot(data=df, x="section", y="score")     # compare groups side by side
+plt.show()`,
+  outcome: "You built a box plot from nine numbers, summarised the real dataset with describe() and spotted a suspicious score of 0 to investigate later.",
+  take: ["The five-number summary is min, Q1, median, Q3 and max.", "IQR = Q3 − Q1. The box holds the middle 50% of the data.", "Values beyond Q1 − 1.5×IQR or Q3 + 1.5×IQR are drawn as separate dots (outliers).", "df.describe() gives all of this for every numeric column in one line."]
+};
+const L1 = { title: "Descriptive statistics and visual summaries", short: "Describe", blurb: "Summarise a column with a few honest numbers, then draw it so its shape is obvious.", tools: "pandas, Matplotlib, Seaborn", steps: [S11, S12, S13, S14, S15] };
+/* ================= LESSON 2 ================= */
+function scatter(x, y, o = {}) {
+  const W = o.W || 680, H = o.H || 360, m = o.m || { l: 56, r: 20, t: 20, b: 48 };
+  const pad = (a, b) => { const s = (b - a) || 1; return [a - s * 0.06, b + s * 0.06]; };
+  const xd = o.xd || pad(Math.min(...x), Math.max(...x)), yd = o.yd || pad(Math.min(...y), Math.max(...y));
+  const p = frame(W, H, m, xd, yd);
+  let s = svgOpen(W, H, o.label || "Scatter plot") + axes(p, { xl: o.xl, yl: o.yl, nx: o.nx || 6, ny: o.ny || 5, xf: o.xf, yf: o.yf });
+  if (o.trend) { const f = linfit(x, y); s += `<line class="trend" x1="${p.x(xd[0])}" y1="${p.y(f.a + f.b * xd[0])}" x2="${p.x(xd[1])}" y2="${p.y(f.a + f.b * xd[1])}"/>`; }
+  if (o.extra) s += o.extra(p);
+  x.forEach((v, i) => { s += `<circle class="dot ${o.cls ? o.cls(i) : ""}" cx="${p.x(v)}" cy="${p.y(y[i])}" r="${o.r || 6}" ${o.fill ? `style="fill:${o.fill(i)}"` : ""} ${o.tip ? `data-tip="${o.tip(i)}"` : ""}/>`; });
+  return s + "</svg>";
+}
+
+const S21 = {
+  t: "Relationships between two variables",
+  intro: "So far we looked at one column at a time. Now we ask a new question: when one variable changes, does another change with it? The tool for this is the scatter plot.",
+  body: () => `
+  <div class="concept"><h4>Reading a scatter plot</h4><p>Each dot is one student. Its position left to right shows one variable and its height shows another. The overall shape of the cloud of dots is the relationship.</p></div>
+  <div class="sim">
+    <div class="controls" role="group" aria-label="Variable on the x-axis"><span class="muted small">Compare score with:</span>${["study_hours", "phone_hours", "attendance", "sleep_hours"].map((c, i) => `<button type="button" class="chip${i ? "" : " on"}" data-x="${c}">${LAB[c]}</button>`).join("")}</div>
+    <div id="sc-svg"></div>
+    <div class="controls"><label class="check"><input id="sc-t" type="checkbox"> Draw the trend line</label></div>
+    <div class="trio" id="sc-cards"></div>
+  </div>
+  <p class="small muted">We’ve set aside two suspicious records for this lesson: ${ANOM_SCORE.name}’s score of 0 and ${ANOM_STUDY.name}’s 22 study hours a day. Lesson 3 is all about them.</p>`,
+  init(root) {
+    let xc = "study_hours";
+    function draw() {
+      const P = pairs(xc, "score"), r = corr(P.x, P.y), f = linfit(P.x, P.y);
+      $("#sc-svg", root).innerHTML = scatter(P.x, P.y, { xl: LAB[xc], yl: "Exam score", trend: $("#sc-t", root).checked, tip: i => `${P.rows[i].name}: ${P.x[i]} ${xc === "attendance" ? "%" : "h"}, score ${P.y[i]}` });
+      const st = strength(r);
+      const dir = st === "no" ? "None" : f.b > 0 ? "Upward (positive)" : "Downward (negative)";
+      const dirTxt = st === "no" ? `No clear direction. Knowing ${LAB[xc]} doesn’t help you guess the score.` : f.b > 0 ? `Students with more ${LAB[xc]} tend to have <b>higher</b> scores.` : `Students with more ${LAB[xc]} tend to have <b>lower</b> scores.`;
+      const strTxt = { no: "The dots form a shapeless blob.", weak: "A loose cloud: the trend is there, but with many exceptions.", moderate: "A clear trend, with a fair amount of scatter around it.", strong: "The dots hug an imaginary line closely." }[st];
+      $("#sc-cards", root).innerHTML = `<div class="mini"><h5>Direction</h5><p><b>${dir}.</b> ${dirTxt}</p></div><div class="mini"><h5>Strength</h5><p><b>${st === "no" ? "None" : st[0].toUpperCase() + st.slice(1)}.</b> ${strTxt}</p></div><div class="mini"><h5>Form</h5><p><b>Roughly straight.</b> The cloud follows a line rather than a curve, so a straight trend line fits it.</p></div>`;
+    }
+    $$("[data-x]", root).forEach(b => b.addEventListener("click", () => { xc = b.dataset.x; $$("[data-x]", root).forEach(x => x.classList.toggle("on", x === b)); draw(); }));
+    $("#sc-t", root).addEventListener("change", draw); draw();
+  },
+  code: `sns.scatterplot(data=df, x="study_hours", y="score")
+sns.regplot(data=df, x="study_hours", y="score")   # scatter plus a trend line
+plt.show()`,
+  outcome: "You plotted pairs of variables and described what you saw using three words: direction, strength and form.",
+  take: ["A scatter plot puts one variable on each axis; every dot is one observation.", "Upward cloud: positive relationship. Downward cloud: negative. No shape: no relationship.", "The trend line is the straight line that fits the cloud best."]
+};
+
+const S22 = {
+  t: "Measuring it: the correlation coefficient r",
+  intro: "Words like “strong” and “weak” are vague. The Pearson correlation coefficient, written r, turns the cloud of dots into a single number between −1 and +1.",
+  body: () => `
+  <div class="two wide-left">
+    <div class="sim">
+      <div class="sim-head"><h4>Correlation simulator</h4><p>Drag the slider and watch the cloud change shape.</p></div>
+      <div id="r-svg"></div>
+      <div class="controls"><label class="range grow">Target r <input id="r-s" type="range" min="-1" max="1" step="0.05" value="0.6"><output id="r-o">0.60</output></label></div>
+    </div>
+    <div>
+      <div class="rbig"><span>Measured r</span><b id="r-val">0.60</b><em id="r-lab"></em></div>
+      <div class="scale"><div class="scale-bar"></div><i id="r-mark"></i><div class="scale-labels"><span>−1</span><span>0</span><span>+1</span></div></div>
+      <ul class="guide">
+        <li><b>±0.7 to ±1</b> strong</li><li><b>±0.3 to ±0.7</b> moderate</li><li><b>±0.1 to ±0.3</b> weak</li><li><b>−0.1 to +0.1</b> almost none</li>
+      </ul>
+      <p class="small">The sign gives the direction; the size gives the strength. r = −0.8 is just as strong as r = +0.8, only downward.</p>
+    </div>
+  </div>
+  <div class="sim game">
+    <div class="sim-head"><h4>Train your eye: guess the correlation</h4><p>Look at the cloud, set your guess, then check it.</p></div>
+    <div class="two"><div id="g-svg"></div><div>
+      <label class="range grow">Your guess <input id="g-s" type="range" min="-1" max="1" step="0.05" value="0"><output id="g-o">0.00</output></label>
+      <div class="controls"><button class="btn primary" id="g-check" type="button">Check my guess</button><button class="btn ghost" id="g-new" type="button">New cloud</button></div>
+      <div class="insight" id="g-res" aria-live="polite">Rounds played: 0</div>
+    </div></div>
+  </div>`,
+  init(root) {
+    const R = rng(77), N = 80, X = [], E = [];
+    for (let i = 0; i < N; i++) { X.push(gauss(R)); E.push(gauss(R)); }
+    const opts = { xd: [-3.2, 3.2], yd: [-3.2, 3.2], xl: "Variable X", yl: "Variable Y", xf: () => "", yf: () => "", r: 5 };
+    function draw() {
+      const t = +$("#r-s", root).value; $("#r-o", root).textContent = minus(t.toFixed(2));
+      const Y = X.map((x, i) => t * x + Math.sqrt(Math.max(0, 1 - t * t)) * E[i]);
+      const r = corr(X, Y);
+      $("#r-svg", root).innerHTML = scatter(X, Y, opts);
+      $("#r-val", root).textContent = minus(fmt(r)); $("#r-lab", root).textContent = strengthLabel(r);
+      $("#r-mark", root).style.left = `${(r + 1) / 2 * 100}%`;
+    }
+    $("#r-s", root).addEventListener("input", draw); draw();
+    let target = 0, GX = [], GY = [], rounds = 0, errSum = 0, checked = false;
+    function newCloud() {
+      const r2 = rng(Math.floor(Math.random() * 1e9)); const t = (r2() * 2 - 1) * 0.95; GX = []; GY = [];
+      for (let i = 0; i < 60; i++) { const x = gauss(r2), e = gauss(r2); GX.push(x); GY.push(t * x + Math.sqrt(1 - t * t) * e); }
+      target = corr(GX, GY); checked = false;
+      $("#g-svg", root).innerHTML = scatter(GX, GY, { ...opts, W: 420, H: 300, xl: "", yl: "", m: { l: 20, r: 12, t: 12, b: 20 } });
+      $("#g-check", root).disabled = false;
+    }
+    $("#g-s", root).addEventListener("input", () => { $("#g-o", root).textContent = minus((+$("#g-s", root).value).toFixed(2)); });
+    $("#g-check", root).addEventListener("click", () => {
+      if (checked) return; checked = true; $("#g-check", root).disabled = true;
+      const g = +$("#g-s", root).value, err = Math.abs(g - target); rounds++; errSum += err;
+      const verdict = err < 0.1 ? "Excellent eye!" : err < 0.2 ? "Close." : err < 0.35 ? "Not bad." : "Keep practising.";
+      $("#g-res", root).innerHTML = `<b>${verdict}</b> The real r is <b>${minus(fmt(target))}</b> (${strengthLabel(target).toLowerCase()}). You were off by ${fmt(err)}.<br><span class="small">Rounds played: ${rounds}. Average error: ${fmt(errSum / rounds)}</span>`;
+    });
+    $("#g-new", root).addEventListener("click", newCloud); newCloud();
+  },
+  code: `df["study_hours"].corr(df["score"])   # Pearson r between two columns
+df.corr(numeric_only=True)             # r for every pair of numeric columns`,
+  outcome: "You turned a cloud of dots into a single number between −1 and +1 and trained your eye to estimate it.",
+  take: ["r = +1: a perfect upward line. r = −1: a perfect downward line. r ≈ 0: no straight-line relationship.", "Rough guide: |r| below 0.3 is weak, 0.3 to 0.7 is moderate, above 0.7 is strong.", "r only measures straight-line relationships, so always look at the scatter plot too."]
+};
+
+function pairSentence(a, b, r) {
+  const st = strength(r);
+  if (st === "no") return `There’s almost no straight-line relationship between ${LAB[a]} and ${LAB[b]}.`;
+  return `${st[0].toUpperCase() + st.slice(1)} ${r > 0 ? "positive" : "negative"} relationship: higher values of ${LAB[a]} tend to go with ${r > 0 ? "higher" : "lower"} values of ${LAB[b]}.`;
+}
+const S23 = {
+  t: "The correlation matrix and heatmap",
+  intro: "With 5 numeric columns there are 10 different pairs to check. Instead of drawing 10 scatter plots, we calculate r for every pair at once and colour the results.",
+  body: () => `
+  <div class="two">
+    <div class="sim"><div class="sim-head"><h4>Correlation heatmap</h4><p>Red means positive, blue means negative, white means none. Click a cell to open its scatter plot.</p></div><div id="hm-svg" class="hm"></div></div>
+    <div><div class="sim"><div id="hm-pair"></div></div><div class="insight" id="hm-top"></div></div>
+  </div>`,
+  init(root) {
+    const M = corrMatrix(CLEAN); let sel = [0, 4];
+    function draw() {
+      $("#hm-svg", root).innerHTML = heatmap(M, NUM, { sel });
+      const [i, j] = sel, a = NUM[i], b = NUM[j];
+      if (i === j) { $("#hm-pair", root).innerHTML = `<h5>${a} with itself</h5><p>r = 1.00, always. Any column is perfectly correlated with itself, which is why the diagonal is solid red. It tells us nothing new.</p>`; return; }
+      const P = pairs(a, b);
+      $("#hm-pair", root).innerHTML = `<h5>${LAB[a]} and ${LAB[b]}: r = ${minus(fmt(M[i][j]))}</h5><p>${pairSentence(a, b, M[i][j])}</p>` + scatter(P.x, P.y, { W: 440, H: 280, xl: LAB[a], yl: LAB[b], trend: true, r: 5, tip: k => `${P.rows[k].name}: ${P.x[k]}, ${P.y[k]}` });
+    }
+    const list = []; for (let i = 0; i < 5; i++) for (let j = i + 1; j < 5; j++) list.push([i, j, M[i][j]]);
+    list.sort((p, q) => Math.abs(q[2]) - Math.abs(p[2]));
+    $("#hm-top", root).innerHTML = `<b>Strongest pairs in our class:</b><ol>${list.slice(0, 3).map(([i, j, v]) => `<li>${LAB[NUM[i]]} and ${LAB[NUM[j]]}: r = ${minus(fmt(v))}</li>`).join("")}</ol><span class="small">Notice the matrix is a mirror image across the diagonal: the cell for (A, B) equals the cell for (B, A).</span>`;
+    const host = $("#hm-svg", root);
+    const pick = e => { const g = e.target.closest(".hcell"); if (!g) return; sel = [+g.dataset.i, +g.dataset.j]; draw(); };
+    host.addEventListener("click", pick);
+    host.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(e); } });
+    draw();
+  },
+  code: `corr = df.corr(numeric_only=True)
+sns.heatmap(corr, annot=True, fmt=".2f",
+            cmap="coolwarm", vmin=-1, vmax=1)
+plt.show()`,
+  outcome: "You checked every pair of variables at once and found the strongest relationships in the dataset in seconds.",
+  take: ["A correlation matrix shows r for every pair of numeric columns; a heatmap colours it.", "The diagonal is always 1, and the two halves mirror each other.", "Use the heatmap as a map: find the strong cells, then open their scatter plots to check."]
+};
+
+const S24 = {
+  t: "Traps: when correlation misleads",
+  intro: "The number r is useful, but it can fool you. Here are three classic traps. Each one is easy to spot once you look at the picture.",
+  body: () => `
+  <div class="sim">
+    <div class="controls tabs" role="tablist">${[["cause", "Correlation isn’t causation"], ["curve", "Curved patterns"], ["out", "One extreme point"]].map(([k, v], i) => `<button type="button" role="tab" class="chip${i ? "" : " on"}" data-tab="${k}">${v}</button>`).join("")}</div>
+    <div class="two wide-left"><div id="tr-svg"></div><div><div class="rbig sm"><span>r</span><b id="tr-r"></b><em id="tr-l"></em></div><div id="tr-text"></div><button class="btn primary" id="tr-btn" type="button"></button></div></div>
+  </div>`,
+  init(root) {
+    const r1 = rng(5), D = [];
+    for (let i = 0; i < 60; i++) { const t = 18 + r1() * 24; D.push({ t, ice: 30 + 4 * t + gauss(r1) * 14, sun: Math.max(0, -15 + 1.1 * t + gauss(r1) * 4) }); }
+    const r2 = rng(9), C = []; for (let i = 0; i < 50; i++) { const s = r2() * 10; C.push({ s, p: 88 - 2.6 * (s - 5) ** 2 + gauss(r2) * 4 }); }
+    const r3 = rng(21), O = []; for (let i = 0; i < 20; i++) O.push({ x: 1 + r3() * 9, y: 50 + gauss(r3) * 10 });
+    let tab = "cause", on = false;
+    const tcol = t => { const k = (t - 18) / 24; const a = [47, 107, 255], b = [255, 149, 0]; return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(",")})`; };
+    function draw() {
+      let svg = "", r = 0, text = "", btn = "";
+      if (tab === "cause") {
+        const x = D.map(d => d.ice), y = D.map(d => d.sun); r = corr(x, y);
+        svg = scatter(x, y, { xl: "Ice cream sales per day", yl: "Sunburn cases per day", fill: on ? i => tcol(D[i].t) : null, tip: i => `${Math.round(D[i].t)} °C`, extra: on ? p => `<g class="legend"><text class="tick" x="${p.m.l + 10}" y="${p.m.t + 14}">cool day</text><rect x="${p.m.l + 70}" y="${p.m.t + 4}" width="90" height="12" rx="6" fill="url(#tgrad)"/><text class="tick" x="${p.m.l + 168}" y="${p.m.t + 14}">hot day</text></g>` : null });
+        text = on ? `<p><b>The hidden variable is temperature.</b> Hot days cause both more ice cream sales and more sunburns. Ice cream doesn’t cause sunburn. A hidden third variable like this is called a <b>confounder</b>.</p>` : `<p>Ice cream sales and sunburn cases are strongly correlated. Does eating ice cream cause sunburn? Think about it, then reveal the answer.</p>`;
+        btn = on ? "Hide the hidden variable" : "Reveal the hidden variable";
+      } else if (tab === "curve") {
+        const x = C.map(d => d.s), y = C.map(d => d.p); r = corr(x, y);
+        svg = scatter(x, y, { xl: "Stress level before an exam (0–10)", yl: "Exam performance", extra: on ? p => { let d = ""; for (let k = 0; k <= 60; k++) { const s = k / 6; d += (k ? "L" : "M") + p.x(s).toFixed(1) + "," + p.y(88 - 2.6 * (s - 5) ** 2).toFixed(1); } return `<path class="kde" d="${d}"/>`; } : null });
+        text = `<p>r is close to 0, which seems to say “no relationship”. But look: performance is best at medium stress and drops at both extremes. That’s a strong <b>curved</b> relationship. r only detects straight lines, so it misses it.</p>`;
+        btn = on ? "Hide the curve" : "Show the real pattern";
+      } else {
+        const pts = on ? [...O, { x: 30, y: 125 }] : O, x = pts.map(d => d.x), y = pts.map(d => d.y); r = corr(x, y);
+        svg = scatter(x, y, { xl: "Variable X", yl: "Variable Y", xd: [0, 32], yd: [0, 135], trend: true, cls: i => i === 20 ? "flag" : "" });
+        const r0 = corr(O.map(d => d.x), O.map(d => d.y));
+        text = `<p>Without the extreme point, r = ${minus(fmt(r0))}: no relationship at all. ${on ? `Adding one single extreme point makes r jump to <b>${minus(fmt(r))}</b>. One value created a “strong” correlation out of nothing.` : "Now add one extreme point and watch r."}</p>`;
+        btn = on ? "Remove the extreme point" : "Add one extreme point";
+      }
+      $("#tr-svg", root).innerHTML = svg; $("#tr-r", root).textContent = minus(fmt(r)); $("#tr-l", root).textContent = strengthLabel(r);
+      $("#tr-text", root).innerHTML = text; $("#tr-btn", root).textContent = btn;
+    }
+    $$("[data-tab]", root).forEach(b => b.addEventListener("click", () => { tab = b.dataset.tab; on = false; $$("[data-tab]", root).forEach(x => x.classList.toggle("on", x === b)); draw(); }));
+    $("#tr-btn", root).addEventListener("click", () => { on = !on; draw(); }); draw();
+  },
+  code: `# Colour the dots by a possible hidden cause
+sns.scatterplot(data=days, x="ice_cream_sales", y="sunburn_cases", hue="temperature")
+
+# Spearman's r works on ranks, so it handles curves and outliers better
+df["study_hours"].corr(df["score"], method="spearman")`,
+  outcome: "You saw three ways a correlation number can fool you, and how a plot exposes each one.",
+  take: ["Correlation is not causation: a hidden third variable (a confounder) can drive both.", "r near 0 doesn’t mean “no relationship”. The pattern might be curved.", "A single extreme point can create or destroy a correlation."]
+};
+
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const SALES = (function () { const r = rng(31); return Array.from({ length: 36 }, (_, m) => { const mo = m % 12; const season = mo >= 5 && mo <= 7 ? -80 : (mo === 2 || mo === 9 ? 18 : 0); return Math.round(210 + 3.2 * m + season + gauss(r) * 12); }); })();
+const S25 = {
+  t: "Recognising patterns: trends, seasons and groups",
+  intro: "Patterns are regular behaviours hidden in the data. Some unfold over time; others appear when we compare groups.",
+  body: () => `
+  <div class="trio">
+    <div class="mini"><h5>Trend</h5><p>The long-term direction: slowly rising or falling over months or years.</p></div>
+    <div class="mini"><h5>Seasonality</h5><p>A pattern that repeats at fixed intervals: every summer, every weekend, every exam week.</p></div>
+    <div class="mini"><h5>Noise</h5><p>Random ups and downs with no meaning. We smooth it away to see the other two.</p></div>
+  </div>
+  <div class="sim">
+    <div class="sim-head"><h4>University canteen: monthly sales (thousand PKR), 2023–2025</h4><p>Turn on the tools one at a time and describe what you see.</p></div>
+    <div id="ts-svg"></div>
+    <div class="controls">
+      <label class="check"><input id="ts-v" type="checkbox"> Shade summer vacation (Jun–Aug)</label>
+      <label class="check"><input id="ts-t" type="checkbox"> Trend line</label>
+      <label class="range">Rolling mean window <input id="ts-w" type="range" min="1" max="12" value="1"><output id="ts-wo">off</output></label>
+    </div>
+    <div class="insight" id="ts-read" aria-live="polite"></div>
+  </div>
+  <div class="sim">
+    <div class="sim-head"><h4>Patterns across groups: exam score by section</h4><p>Bars show each section’s mean; dots show individual students.</p></div>
+    <div id="gp-svg"></div><div class="insight" id="gp-read"></div>
+  </div>`,
+  init(root) {
+    const W = 680, H = 300, m = { l: 50, r: 20, t: 20, b: 44 }, p = frame(W, H, m, [0, 35], [100, 340]);
+    const xs = SALES.map((_, i) => i), fit = linfit(xs, SALES);
+    function draw() {
+      const w = +$("#ts-w", root).value; $("#ts-wo", root).textContent = w === 1 ? "off" : w + " months";
+      let s = svgOpen(W, H, "Monthly sales line chart");
+      if ($("#ts-v", root).checked) for (let y = 0; y < 3; y++) s += `<rect class="vac" x="${p.x(y * 12 + 4.5)}" y="${m.t}" width="${p.x(3) - p.x(0)}" height="${H - m.t - m.b}" rx="6"/>`;
+      s += axes(p, { xt: [0, 6, 12, 18, 24, 30, 35], xf: v => `${MON[v % 12]} ${23 + Math.floor(v / 12)}`, yl: "Sales", ny: 5 });
+      s += `<path class="line" d="${SALES.map((v, i) => (i ? "L" : "M") + p.x(i).toFixed(1) + "," + p.y(v).toFixed(1)).join("")}"/>`;
+      SALES.forEach((v, i) => { s += `<circle class="dot sm" cx="${p.x(i)}" cy="${p.y(v)}" r="3.5" data-tip="${MON[i % 12]} 20${23 + Math.floor(i / 12)}: ${v}"/>`; });
+      if (w > 1) { let d = ""; for (let i = w - 1; i < 36; i++) { const v = mean(SALES.slice(i - w + 1, i + 1)); d += (i === w - 1 ? "M" : "L") + p.x(i).toFixed(1) + "," + p.y(v).toFixed(1); } s += `<path class="roll" d="${d}"/>`; }
+      if ($("#ts-t", root).checked) s += `<line class="trend" x1="${p.x(0)}" y1="${p.y(fit.a)}" x2="${p.x(35)}" y2="${p.y(fit.a + fit.b * 35)}"/>`;
+      $("#ts-svg", root).innerHTML = s + "</svg>";
+      const notes = [];
+      if ($("#ts-v", root).checked) notes.push("<b>Seasonality:</b> sales drop sharply every June to August, when students are on vacation. The same dip repeats each year.");
+      if ($("#ts-t", root).checked) notes.push(`<b>Trend:</b> underneath the ups and downs, sales grow by about ${fmt(fit.b, 1)} thousand PKR per month.`);
+      if (w > 1) notes.push(`<b>Rolling mean (${w} months):</b> each point on the smooth line is the average of the last ${w} months, which irons out the noise. The first ${w - 1} months have no value yet; pandas fills them with NaN.${w === 12 ? " A 12-month window averages a whole year, so the seasonal dip disappears too, leaving only the trend." : ""}`);
+      $("#ts-read", root).innerHTML = notes.length ? notes.join("<br>") : "The raw line looks jumpy. Switch on the tools above to separate the trend, the seasonal pattern and the noise.";
+    }
+    ["#ts-v", "#ts-t"].forEach(id => $(id, root).addEventListener("change", draw)); $("#ts-w", root).addEventListener("input", draw); draw();
+    const secs = ["A", "B", "C"], g = secs.map(sc => CLEAN.filter(r => r.section === sc).map(r => r.score));
+    const gm = g.map(mean), W2 = 680, H2 = 260, q = frame(W2, H2, { l: 50, r: 20, t: 20, b: 44 }, [0, 3], [0, 100]);
+    let s2 = svgOpen(W2, H2, "Mean score by section") + axes(q, { xt: [], yl: "Score", ny: 5 });
+    secs.forEach((sc, i) => {
+      const cx = q.x(i + 0.5); s2 += `<rect class="bar soft" x="${cx - 60}" y="${q.y(gm[i])}" width="120" height="${q.y(0) - q.y(gm[i])}" rx="10"/><text class="alabel" x="${cx}" y="${H2 - 18}" text-anchor="middle">Section ${sc}</text><text class="mklab" x="${cx}" y="${q.y(gm[i]) - 8}" text-anchor="middle">mean ${fmt(gm[i], 1)}</text>`;
+      g[i].forEach((v, k) => { s2 += `<circle class="dot sm" cx="${cx - 40 + (k * 17) % 80}" cy="${q.y(v)}" r="4" data-tip="Section ${sc}: ${v}"/>`; });
+    });
+    $("#gp-svg", root).innerHTML = s2 + "</svg>";
+    const hi = gm.indexOf(Math.max(...gm)), lo = gm.indexOf(Math.min(...gm));
+    $("#gp-read", root).innerHTML = `Section ${secs[hi]} averages ${fmt(gm[hi] - gm[lo], 1)} points more than Section ${secs[lo]}. That’s a group pattern worth asking about: different teacher, timetable or study habits? Notice how much the dots overlap, though. The spread within each section is bigger than the gap between them.`;
+  },
+  code: `sales["smooth"] = sales["amount"].rolling(window=3).mean()   # smooth the noise
+sales.plot(x="month", y=["amount", "smooth"])
+
+df.groupby("section")["score"].mean()          # compare groups
+sns.barplot(data=df, x="section", y="score")
+sns.pairplot(df, hue="section")                # every scatter plot at once`,
+  outcome: "You separated a noisy time series into trend, seasonal pattern and noise, and compared groups side by side.",
+  take: ["Trend = the long-term direction. Seasonality = a pattern that repeats at fixed intervals.", "A rolling mean smooths short-term noise so the trend shows through.", "groupby() compares groups. Always check whether the gap between groups is bigger than the spread inside them."]
+};
+const L2 = { title: "Correlation analysis and pattern recognition", short: "Correlate", blurb: "Discover how variables move together, measure it with one number and learn when that number lies.", tools: "pandas, Seaborn, Matplotlib", steps: [S21, S22, S23, S24, S25] };
+/* ================= LESSON 3 ================= */
+const LOGINS = (function () {
+  const r = rng(404); const v = [];
+  for (let t = 0; t < 72; t++) { const h = t % 24; const day = h >= 6 && h <= 22 ? 110 * Math.max(0, Math.sin(Math.PI * (h - 6) / 16)) : 0; v.push(Math.max(2, Math.round(12 + day + gauss(r) * 6))); }
+  v[27] = 290; v[52] = 118; for (let t = 13; t <= 17; t++) v[t] = 0;
+  return v;
+})();
+const ANOMS = [
+  { id: "point", idx: [27], name: "Point anomaly", what: "A single value far away from everything else.", ex: "290 logins at 3 AM on Tuesday: more than double the busiest daytime hour. In security work, this could be a brute-force attack trying thousands of passwords." },
+  { id: "context", idx: [52], name: "Contextual anomaly", what: "A value that is normal in one situation but strange in this one.", ex: "118 logins is a perfectly normal number at 2 PM, but at 4 AM on Wednesday it’s very odd. The context (time of day) makes it an anomaly." },
+  { id: "collective", idx: [13, 14, 15, 16, 17], name: "Collective anomaly", what: "A group of values that is unusual together, even if each one alone might not be.", ex: "Zero logins for five hours on a Monday afternoon. One quiet hour is possible; five in a row in the busiest part of the day suggests the portal was down." }
+];
+const DAYS = ["Mon", "Tue", "Wed"];
+const S31 = {
+  t: "What is an anomaly?",
+  intro: "An anomaly, or outlier, is a value that doesn’t fit the pattern of the rest. Before using any formula, let’s train our eyes. Real analysts always plot first.",
+  body: () => `
+  <div class="sim">
+    <div class="sim-head"><h4>Spot the anomalies</h4><p>This chart shows logins per hour on the university portal over three days. Busy in the day, quiet at night. Three unusual things are hidden in it. Click on them.</p></div>
+    <div id="an-svg" class="clickable"></div>
+    <div class="controls"><span class="score-pill" id="an-score">Found 0 of 3</span><button class="btn ghost" id="an-all" type="button">Reveal all</button></div>
+    <div class="insight" id="an-msg" aria-live="polite">Tip: compare each hour with the same hour on the other days.</div>
+  </div>
+  <div class="trio" id="an-cards"></div>`,
+  init(root) {
+    const W = 700, H = 300, m = { l: 50, r: 16, t: 22, b: 50 }, p = frame(W, H, m, [0, 71], [0, 310]);
+    const found = new Set();
+    function cards() {
+      $("#an-cards", root).innerHTML = ANOMS.map(a => found.has(a.id) ? `<div class="mini found"><h5>${a.name}</h5><p>${a.what}</p><p class="small">${a.ex}</p></div>` : `<div class="mini locked"><h5>Locked</h5><p class="muted">Find this anomaly in the chart to unlock its explanation.</p></div>`).join("");
+      $("#an-score", root).textContent = `Found ${found.size} of 3`;
+    }
+    function draw() {
+      let s = svgOpen(W, H, "Logins per hour over three days");
+      for (let d = 0; d < 3; d++) { s += `<rect class="night" x="${p.x(d * 24)}" y="${m.t}" width="${p.x(6) - p.x(0)}" height="${H - m.t - m.b}"/><rect class="night" x="${p.x(d * 24 + 22.5)}" y="${m.t}" width="${p.x(1.5) - p.x(0)}" height="${H - m.t - m.b}"/>`; }
+      s += axes(p, { xt: [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66], xf: v => `${v % 24 === 0 ? DAYS[v / 24] + " " : ""}${String(v % 24).padStart(2, "0")}:00`, yl: "Logins", ny: 5, noXGrid: true });
+      s += `<path class="line" d="${LOGINS.map((v, i) => (i ? "L" : "M") + p.x(i).toFixed(1) + "," + p.y(v).toFixed(1)).join("")}"/>`;
+      ANOMS.forEach(a => { if (found.has(a.id)) { const x0 = p.x(a.idx[0]) - 10, x1 = p.x(a.idx[a.idx.length - 1]) + 10; const ys = a.idx.map(i => p.y(LOGINS[i])); s += `<rect class="ring" x="${x0}" y="${Math.min(...ys) - 12}" width="${x1 - x0}" height="${Math.max(...ys) - Math.min(...ys) + 24}" rx="12"/><text class="mklab flagtxt" x="${(x0 + x1) / 2}" y="${Math.min(...ys) - 18}" text-anchor="middle">${a.name.split(" ")[0]}</text>`; } });
+      LOGINS.forEach((v, i) => { const isA = ANOMS.some(a => found.has(a.id) && a.idx.includes(i)); s += `<circle class="dot sm${isA ? " flag" : ""}" cx="${p.x(i)}" cy="${p.y(v)}" r="4"/><circle class="hit" data-i="${i}" cx="${p.x(i)}" cy="${p.y(v)}" r="11" data-tip="${DAYS[Math.floor(i / 24)]} ${String(i % 24).padStart(2, "0")}:00, ${v} logins"/>`; });
+      $("#an-svg", root).innerHTML = s + "</svg>"; cards();
+    }
+    $("#an-svg", root).addEventListener("click", e => {
+      const h = e.target.closest("[data-i]"); if (!h) return; const i = +h.dataset.i;
+      const a = ANOMS.find(x => x.idx.includes(i));
+      const msg = $("#an-msg", root);
+      if (a) { msg.innerHTML = found.has(a.id) ? `You already found this one: the <b>${a.name.toLowerCase()}</b>.` : `<b>Found it: a ${a.name.toLowerCase()}!</b> ${a.what}`; found.add(a.id); draw(); if (found.size === 3) msg.innerHTML += " <b>All three found. Nice detective work.</b>"; }
+      else { const h2 = i % 24; msg.innerHTML = `${DAYS[Math.floor(i / 24)]} ${String(h2).padStart(2, "0")}:00 had ${LOGINS[i]} logins. That fits the usual pattern for ${h2 >= 7 && h2 <= 21 ? "daytime" : "night-time"}. Keep looking.`; }
+    });
+    $("#an-all", root).addEventListener("click", () => { ANOMS.forEach(a => found.add(a.id)); draw(); $("#an-msg", root).innerHTML = "All three anomalies are now marked. Read the cards below."; });
+    draw();
+  },
+  code: `logins = pd.read_csv("portal_logins.csv", parse_dates=["hour"])
+logins.plot(x="hour", y="count")    # always plot before you test
+plt.show()`,
+  outcome: "You hunted anomalies by eye and named the three kinds: point, contextual and collective.",
+  take: ["An anomaly (outlier) is a value that doesn’t fit the pattern of the rest.", "Point: one value far from all others. Contextual: normal elsewhere, strange here. Collective: a group that’s odd together.", "Anomalies can be errors or the most important discovery in the dataset, so we never ignore them."]
+};
+
+function colPicker(cols, active) { return `<div class="controls" role="group" aria-label="Column"><span class="muted small">Column:</span>${cols.map(c => `<button type="button" class="chip${c === active ? " on" : ""}" data-c="${c}">${c}</button>`).join("")}</div>`; }
+const DOM = { score: [-5, 105], study_hours: [0, 24], phone_hours: [0, 10] };
+const S32 = {
+  t: "Z-score: how many standard deviations away?",
+  intro: "Our eyes are good, but we need a rule a computer can apply to thousands of rows. The z-score measures how unusual a value is in units of standard deviation.",
+  body: () => `
+  <div class="formula"><span>z</span> = <span class="frac"><span>value − mean</span><span>standard deviation</span></span></div>
+  <p>A z-score of 0 means exactly average. z = 2 means two standard deviations above average. z = −3 means three below. In bell-shaped data about 99.7% of values have a z-score between −3 and +3, so values beyond that are rare.</p>
+  <div class="sim">
+    ${colPicker(["score", "study_hours", "phone_hours"], "score")}
+    <div id="z-svg"></div>
+    <div class="controls"><label class="range grow">Threshold: flag if |z| is above <input id="z-t" type="range" min="1.5" max="4" step="0.1" value="3"><output id="z-o">3.0</output></label></div>
+    <div class="two"><div class="insight" id="z-calc"></div><div class="tablewrap"><table class="data" id="z-tab"></table></div></div>
+  </div>`,
+  init(root) {
+    let c = "score";
+    function draw() {
+      const t = +$("#z-t", root).value; $("#z-o", root).textContent = t.toFixed(1);
+      const rows = DATA.filter(r => r[c] != null), v = rows.map(r => r[c]), mu = mean(v), sd = std(v), z = v.map(x => (x - mu) / sd);
+      const W = 700, H = 230, m = { l: 30, r: 30, t: 30, b: 70 }, p = frame(W, H, m, DOM[c], [0, 1]), cy = 105;
+      let s = svgOpen(W, H, "Values with z-score scale") + `<rect class="band b" x="${p.x(clamp(mu - t * sd, DOM[c][0], DOM[c][1]))}" y="${cy - 40}" width="${p.x(clamp(mu + t * sd, DOM[c][0], DOM[c][1])) - p.x(clamp(mu - t * sd, DOM[c][0], DOM[c][1]))}" height="80" rx="12"/>` + axes(p, { noY: true, noXGrid: true, nx: 8, xl: "" });
+      s += `<text class="tick" x="${p.x(clamp(mu - t * sd, DOM[c][0], DOM[c][1])) + 6}" y="${cy - 46}">normal zone: |z| ≤ ${t.toFixed(1)}</text>`;
+      for (let k = -5; k <= 5; k++) { const x = mu + k * sd; if (x < DOM[c][0] || x > DOM[c][1]) continue; s += `<line class="axis" x1="${p.x(x)}" x2="${p.x(x)}" y1="${H - 34}" y2="${H - 28}"/><text class="tick ztick" x="${p.x(x)}" y="${H - 14}" text-anchor="middle">z = ${minus(k)}</text>`; }
+      s += `<line class="axis" x1="${m.l}" x2="${W - m.r}" y1="${H - 34}" y2="${H - 34}"/><line class="mk mean" x1="${p.x(mu)}" x2="${p.x(mu)}" y1="${cy - 44}" y2="${H - m.b}"/>`;
+      v.forEach((x, i) => { const f = Math.abs(z[i]) > t; s += `<circle class="dot ${f ? "flag" : "soft"}" cx="${p.x(x)}" cy="${cy + ((i * 37) % 7 - 3) * 8}" r="${f ? 7 : 5}" data-tip="${rows[i].name}: ${x} (z = ${minus(fmt(z[i]))})"/>`; if (f) s += `<text class="mklab flagtxt" x="${p.x(x)}" y="${cy + ((i * 37) % 7 - 3) * 8 - 12}" text-anchor="middle">${rows[i].name}</text>`; });
+      $("#z-svg", root).innerHTML = s + "</svg>";
+      const fl = rows.map((r, i) => ({ r, x: v[i], z: z[i] })).filter(o => Math.abs(o.z) > t).sort((a, b) => Math.abs(b.z) - Math.abs(a.z));
+      $("#z-tab", root).innerHTML = `<thead><tr><th>Flagged student</th><th>${c}</th><th>z-score</th></tr></thead><tbody>${fl.length ? fl.map(o => `<tr><td>${o.r.name}</td><td>${o.x}</td><td><b>${minus(fmt(o.z))}</b></td></tr>`).join("") : `<tr><td colspan="3" class="muted">No values beyond ±${t.toFixed(1)}. Lower the threshold to flag more.</td></tr>`}</tbody>`;
+      const ex = fl[0];
+      let calc = `<b>For ${c}:</b> mean = ${fmt(mu, 2)}, standard deviation = ${fmt(sd, 2)}.`;
+      if (ex) {
+        const rest = v.filter((x, i) => Math.abs(z[i]) <= t);
+        calc += `<br>${ex.r.name}: z = (${ex.x} − ${fmt(mu, 2)}) ÷ ${fmt(sd, 2)} = <b>${minus(fmt(ex.z))}</b>.<br><span class="small">A catch: flagged values also distort the mean and std used to find them. Without them, std would be ${fmt(std(rest), 2)} instead of ${fmt(sd, 2)}. This is why the next method, IQR, is often preferred.</span>`;
+      }
+      $("#z-calc", root).innerHTML = calc;
+    }
+    $$("[data-c]", root).forEach(b => b.addEventListener("click", () => { c = b.dataset.c; $$("[data-c]", root).forEach(x => x.classList.toggle("on", x === b)); draw(); }));
+    $("#z-t", root).addEventListener("input", draw); draw();
+  },
+  code: `col = df["score"]
+z = (col - col.mean()) / col.std()
+outliers = df[z.abs() > 3]
+outliers[["name", "score"]]`,
+  outcome: "You converted a column into z-scores and flagged values beyond a threshold you chose.",
+  take: ["z = (value − mean) ÷ std: how many standard deviations a value is from the mean.", "|z| > 3 is a common red flag; |z| > 2 is a softer warning.", "Outliers inflate the mean and std that z-scores rely on, which can partly hide them."]
+};
+
+const S33 = {
+  t: "IQR fences: the box-plot rule",
+  intro: "The IQR method uses the quartiles you met in Lesson 1. Quartiles depend on the middle of the data, so extreme values can’t pull them around.",
+  body: () => `
+  <div class="formula small-f">lower fence = Q1 − k × IQR &nbsp;&nbsp; upper fence = Q3 + k × IQR</div>
+  <div class="sim">
+    ${colPicker(["score", "study_hours", "phone_hours"], "score")}
+    <div id="iq-svg"></div>
+    <div class="controls"><label class="range grow">Fence multiplier k <input id="iq-k" type="range" min="1" max="3" step="0.1" value="1.5"><output id="iq-o">1.5</output></label></div>
+    <div class="two"><div class="insight" id="iq-calc"></div><div class="tablewrap"><table class="data" id="iq-tab"></table></div></div>
+  </div>`,
+  init(root) {
+    let c = "score";
+    function draw() {
+      const k = +$("#iq-k", root).value; $("#iq-o", root).textContent = k.toFixed(1);
+      const rows = DATA.filter(r => r[c] != null), v = rows.map(r => r[c]);
+      const b = boxPlot(v, { k, d: DOM[c], names: rows.map(r => r.name), xl: c, label: "Box plot with fences" });
+      $("#iq-svg", root).innerHTML = b.svg;
+      $("#iq-tab", root).innerHTML = `<thead><tr><th>Flagged student</th><th>${c}</th><th>Side</th></tr></thead><tbody>${b.out.length ? b.out.map(i => `<tr><td>${rows[i].name}</td><td>${v[i]}</td><td>${v[i] < b.lo ? "below lower fence" : "above upper fence"}</td></tr>`).join("") : `<tr><td colspan="3" class="muted">Nothing outside the fences at k = ${k.toFixed(1)}.</td></tr>`}</tbody>`;
+      const mu = mean(v), sd = std(v), zc = v.filter(x => Math.abs((x - mu) / sd) > 3).length;
+      $("#iq-calc", root).innerHTML = `Q1 = ${fmt(b.q1, 2)}, Q3 = ${fmt(b.q3, 2)}, so IQR = ${fmt(b.iqr, 2)}.<br>Fences: ${fmt(b.q1, 2)} − ${k.toFixed(1)} × ${fmt(b.iqr, 2)} = <b>${minus(fmt(b.lo, 2))}</b> and ${fmt(b.q3, 2)} + ${k.toFixed(1)} × ${fmt(b.iqr, 2)} = <b>${fmt(b.hi, 2)}</b>.<br><span class="small">Compare: the IQR rule flags <b>${b.out.length}</b> value${b.out.length === 1 ? "" : "s"} here; the z-score rule (|z| > 3) flags <b>${zc}</b>. When methods disagree, look closer at the values in between.</span>`;
+    }
+    $$("[data-c]", root).forEach(b => b.addEventListener("click", () => { c = b.dataset.c; $$("[data-c]", root).forEach(x => x.classList.toggle("on", x === b)); draw(); }));
+    $("#iq-k", root).addEventListener("input", draw); draw();
+  },
+  code: `q1, q3 = col.quantile([0.25, 0.75])
+iqr = q3 - q1
+low, high = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+outliers = df[(col < low) | (col > high)]`,
+  outcome: "You applied the box-plot rule to find outliers and compared it with the z-score method on the same data.",
+  take: ["Fences sit k × IQR beyond the box. k = 1.5 is standard; k = 3 flags only extreme values.", "Quartiles barely move when outliers are present, so the IQR rule is robust.", "When methods disagree, that’s a signal to look closer, not a mistake."]
+};
+
+const SCEN = [
+  { q: "A student record says age = 250.", opts: ["Keep it: it’s real data", "Data-entry error: fix it or mark it missing", "Delete the whole dataset"], a: 1, why: "Nobody is 250 years old. An impossible value is an error. Check the source (maybe it was 25) or set it to missing." },
+  { q: `${ANOM_STUDY.name}’s study_hours = 22 per day. Everyone else studies 1 to 9 hours.`, opts: ["Probably a typo for 2.2: confirm, then fix", "Keep it: maybe a genius", "Delete the student from the dataset"], a: 0, why: "22 hours of study a day leaves 2 hours for sleep, food and class: practically impossible. A missing decimal point is the likely cause. Confirm with the source before fixing." },
+  { q: `${ANOM_SCORE.name}’s score = 0. The attendance sheet shows the student was absent on exam day.`, opts: ["Keep the 0 in the class average", "Treat it as missing (NaN), not as a real score", "Change it to the class average"], a: 1, why: "A 0 here doesn’t measure knowledge; it records an absence. Keeping it drags the average down; inventing a score is worse. Mark it as missing and note why." },
+  { q: "An account that usually spends Rs 5,000 a day spends Rs 480,000 at 3 AM, from a new city.", opts: ["Error: delete it", "Real and important: keep and investigate", "Ignore it"], a: 1, why: "This is likely real and possibly fraud. In fraud detection and cybersecurity the anomaly is the whole point. Removing it would destroy the most valuable finding." },
+  { q: "Portal traffic jumps to 6 times normal on the day exam results are published.", opts: ["Real, expected event: keep it and explain it", "Error: remove the spike", "Replace it with the average"], a: 0, why: "It’s unusual but completely explainable. Keep it and add a note, because capacity planning needs to know about these peaks." }
+];
+const S34 = {
+  t: "Error or discovery? Deciding what to do",
+  intro: "Finding an outlier is only half the job. Every flagged value needs a decision and a reason. Is it a mistake to fix, or a discovery to explain?",
+  body: () => `
+  <div class="trio">
+    <div class="mini"><h5>Fix or mark missing</h5><p>The value is impossible or wrong: typos, wrong units, sensor glitches.</p></div>
+    <div class="mini"><h5>Keep and investigate</h5><p>The value is rare but possible, and might be the most important thing in the data.</p></div>
+    <div class="mini"><h5>Keep and explain</h5><p>The value is unusual for a known reason: holidays, sales, result day.</p></div>
+  </div>
+  <div class="scen" id="sc-list"></div>
+  <div class="insight" id="sc-score" aria-live="polite"></div>`,
+  init(root) {
+    const ans = {};
+    function draw() {
+      $("#sc-list", root).innerHTML = SCEN.map((s, i) => `<div class="case${ans[i] != null ? (ans[i] === s.a ? " right" : " wrong") : ""}"><div class="case-q"><span class="case-n">${i + 1}</span>${s.q}</div><div class="case-opts">${s.opts.map((o, k) => `<button type="button" class="opt${ans[i] === k ? " picked" : ""}${ans[i] != null && k === s.a ? " correct" : ""}" data-q="${i}" data-k="${k}" ${ans[i] != null ? "disabled" : ""}>${o}</button>`).join("")}</div>${ans[i] != null ? `<p class="why"><b>${ans[i] === s.a ? "Good call." : "Not quite."}</b> ${s.why}</p>` : ""}</div>`).join("");
+      const n = Object.keys(ans).length, ok = Object.entries(ans).filter(([i, k]) => SCEN[i].a === k).length;
+      $("#sc-score", root).innerHTML = n === SCEN.length ? `<b>${ok} of ${SCEN.length} correct.</b> ${ok >= 4 ? "You’re thinking like a data analyst." : "Read the explanations again; the reasoning matters more than the score."}` : `Answered ${n} of ${SCEN.length}.`;
+    }
+    $("#sc-list", root).addEventListener("click", e => { const b = e.target.closest(".opt"); if (!b || b.disabled) return; ans[+b.dataset.q] = +b.dataset.k; draw(); });
+    draw();
+  },
+  code: `import numpy as np
+
+# Confirmed typo: fix the value
+df.loc[df["id"] == 27, "study_hours"] = 2.2
+
+# Absent student: a 0 is not a real score, so mark it missing
+df.loc[df["id"] == 13, "score"] = np.nan
+
+# Real but rare values: keep them and flag them for review
+df["needs_review"] = z.abs() > 3`,
+  outcome: "You practised the judgement that turns outlier detection into good analysis: every flagged value got a decision and a reason.",
+  take: ["Impossible values are errors: fix them at the source or mark them missing.", "Rare but real values can be the most important finding (fraud, attacks, record sales). Keep and investigate them.", "Never delete outliers silently. Write down what you changed and why."]
+};
+
+function miniHist(v, d) { const W = 220, H = 70, nb = 10, bw = (d[1] - d[0]) / nb, c = new Array(nb).fill(0); v.forEach(x => c[clamp(Math.floor((x - d[0]) / bw), 0, nb - 1)]++); const mx = Math.max(...c); return `<svg class="chart" viewBox="0 0 ${W} ${H}" aria-hidden="true">${c.map((n, i) => `<rect class="bar" x="${i * W / nb + 1}" y="${H - n / mx * (H - 4)}" width="${W / nb - 2}" height="${n / mx * (H - 4)}" rx="2"/>`).join("")}</svg>`; }
+const INSIGHTS = () => {
+  const rs = corr(pairs("study_hours", "score").x, pairs("study_hours", "score").y), rp = corr(pairs("phone_hours", "score").x, pairs("phone_hours", "score").y);
+  return [
+    { t: "Study time", parts: [["Observation", "Students who study more tend to score higher."], ["Evidence", `r(study_hours, score) = ${fmt(rs)}, a ${strength(rs)} positive correlation, visible as a tight upward cloud.`], ["Meaning", "Study time is strongly associated with performance. Correlation alone doesn’t prove it causes higher scores, but it’s a strong lead."], ["Action", "Share study-plan support with low-hours students, then compare results next term to test the idea."]] },
+    { t: "Phone use", parts: [["Observation", "Heavier phone users tend to score lower."], ["Evidence", `r(phone_hours, score) = ${minus(fmt(rp))}, a ${strength(rp)} negative correlation.`], ["Meaning", "Phone use might take time from studying; the heatmap shows phone hours and study hours are linked too. A possible confounder to keep in mind."], ["Action", "Run a screen-time awareness session and track whether study hours change."]] },
+    { t: "Data quality", parts: [["Observation", "Two records don’t fit: a score of 0 and 22 study hours a day."], ["Evidence", "Both are beyond |z| > 3 and outside the IQR fences."], ["Meaning", "One is an absence recorded as 0, the other a missing decimal point. Left in, they would distort averages and correlations."], ["Action", "Mark the 0 as missing, fix 22 to 2.2 after confirming, and log both changes."]] }
+  ];
+};
+const WORKFLOW = [["Load and inspect", 0, 0], ["Describe the centre", 0, 1], ["Measure the spread", 0, 2], ["See the shape", 0, 3], ["Summarise with describe()", 0, 4], ["Find relationships", 1, 0], ["Check every pair", 1, 2], ["Avoid the traps", 1, 3], ["Spot anomalies", 2, 0], ["Decide and document", 2, 3]];
+const S35 = {
+  t: "From findings to insight: the automated report",
+  intro: "Profiling tools run dozens of EDA checks in one line, so you get a full overview in seconds. Then your job is the part no tool can do: turning findings into insight.",
+  body: () => `
+  <div class="sim">
+    <div class="sim-head"><h4>Profile report preview</h4><p>Simulated preview of what ydata-profiling (formerly pandas-profiling) produces for our class dataset. The real report has more sections, but the same kinds of information.</p></div>
+    <div class="controls"><button class="btn primary" id="pr-run" type="button">Run ProfileReport(df)</button></div>
+    <div class="progress" id="pr-prog" hidden><div class="pbar"><i id="pr-bar"></i></div><span id="pr-step"></span></div>
+    <div id="pr-report" hidden>
+      <div class="controls tabs" role="tablist">${["Overview", "Alerts", "Variables", "Correlations"].map((t, i) => `<button type="button" role="tab" class="chip${i ? "" : " on"}" data-rt="${i}">${t}</button>`).join("")}</div>
+      <div id="pr-body"></div>
+    </div>
+  </div>
+  <h4 class="sub">Turn findings into insight</h4>
+  <p>A good insight has four parts. Pick a finding and reveal it one part at a time.</p>
+  <div class="sim">
+    <div class="controls" role="group">${["Study time", "Phone use", "Data quality"].map((t, i) => `<button type="button" class="chip${i ? "" : " on"}" data-in="${i}">${t}</button>`).join("")}</div>
+    <div class="chain" id="in-chain"></div>
+    <div class="controls"><button class="btn primary" id="in-next" type="button">Reveal the next part</button></div>
+  </div>
+  <h4 class="sub">Your EDA workflow</h4>
+  <p>This is the order you worked through in the lab. Use it as a checklist for any new dataset; select a stage to revisit it.</p>
+  <ol class="flow" id="flow">${WORKFLOW.map(([t, l, s]) => `<li><button type="button" data-go="${l},${s}">${t}</button></li>`).join("")}<li class="last"><span>Report insights</span></li></ol>`,
+  init(root) {
+    const M = corrMatrix(DATA);
+    const alerts = [];
+    for (let i = 0; i < 5; i++) for (let j = i + 1; j < 5; j++) if (Math.abs(M[i][j]) >= 0.7) alerts.push(["High correlation", `<b>${NUM[i]}</b> is highly correlated with <b>${NUM[j]}</b> (r = ${minus(fmt(M[i][j]))})`]);
+    NUM.forEach(c => { const n = DATA.filter(r => r[c] == null).length; if (n) alerts.push(["Missing", `<b>${c}</b> has ${n} (${fmt(n / 40 * 100, 1)}%) missing values`]); });
+    NUM.forEach(c => { const n = DATA.filter(r => r[c] === 0).length; if (n) alerts.push(["Zeros", `<b>${c}</b> has ${n} (${fmt(n / 40 * 100, 1)}%) zeros`]); });
+    alerts.push(["Unique", "<b>id</b> has unique values"], ["Unique", "<b>name</b> has unique values"]);
+    const missing = DATA.reduce((s, r) => s + COLS.filter(c => r[c] == null).length, 0);
+    const tabs = [
+      () => `<div class="stats">${[["Variables", 8], ["Observations", 40], ["Missing cells", missing], ["Missing cells (%)", fmt(missing / 320 * 100, 1) + "%"], ["Duplicate rows", 0], ["Variable types", "Numeric 6, Categorical 1, Text 1"]].map(([a, b]) => `<div class="stat"><span>${a}</span><b>${b}</b></div>`).join("")}</div>`,
+      () => `<ul class="alerts">${alerts.map(([k, t]) => `<li><span class="tag t-${k.split(" ")[0].toLowerCase()}">${k}</span>${t}</li>`).join("")}</ul><p class="small muted">Alerts are the report’s to-do list. Notice they point at what you found by hand: the zero score and the missing values. There’s no high-correlation alert, because the two bad records weaken the real relationships. That’s exactly why we deal with anomalies before trusting correlations.</p>`,
+      () => `<div class="vars">${NUM.map(c => { const v = colv(c), d = describe(v); return `<div class="var"><h5>${c}</h5>${miniHist(v, [Math.min(...v), Math.max(...v)])}<dl><dt>Distinct</dt><dd>${new Set(v).size}</dd><dt>Missing</dt><dd>${40 - v.length}</dd><dt>Mean</dt><dd>${fmt(d.mean, 2)}</dd><dt>Min</dt><dd>${d.min}</dd><dt>Max</dt><dd>${d.max}</dd><dt>Zeros</dt><dd>${v.filter(x => x === 0).length}</dd></dl></div>`; }).join("")}</div>`,
+      () => `<div class="hm">${heatmap(M, NUM, { cell: 66 })}</div><p class="small muted">This heatmap uses all 40 rows, including the two suspicious ones. Compare it with Lesson 2’s heatmap: the study hours and score cell is weaker here, because one wrong value (22 hours) distorts r.</p>`
+    ];
+    let tab = 0;
+    const showTab = () => { $("#pr-body", root).innerHTML = tabs[tab](); $$("[data-rt]", root).forEach(b => b.classList.toggle("on", +b.dataset.rt === tab)); };
+    $$("[data-rt]", root).forEach(b => b.addEventListener("click", () => { tab = +b.dataset.rt; showTab(); }));
+    $("#pr-run", root).addEventListener("click", () => {
+      const btn = $("#pr-run", root); btn.disabled = true; $("#pr-report", root).hidden = true; $("#pr-prog", root).hidden = false;
+      const stages = ["Summarising variables", "Computing correlations", "Detecting alerts", "Rendering report"]; let k = 0;
+      const tick = () => { $("#pr-bar", root).style.width = `${(k + 1) / stages.length * 100}%`; $("#pr-step", root).textContent = stages[k] + "…"; k++; if (k < stages.length) setTimeout(tick, REDUCE ? 0 : 520); else setTimeout(() => { $("#pr-prog", root).hidden = true; $("#pr-report", root).hidden = false; btn.disabled = false; btn.textContent = "Run the report again"; showTab(); }, REDUCE ? 0 : 520); };
+      tick();
+    });
+    let ins = 0, shown = 1; const IN = INSIGHTS();
+    function chain() {
+      const I = IN[ins];
+      $("#in-chain", root).innerHTML = I.parts.map(([h, t], i) => `<div class="link${i < shown ? " show" : ""}"><span class="ln">${i + 1}</span><div><h5>${h}</h5><p>${i < shown ? t : "…"}</p></div></div>`).join("");
+      const b = $("#in-next", root); b.textContent = shown >= 4 ? "Start this insight again" : "Reveal the next part";
+    }
+    $$("[data-in]", root).forEach(b => b.addEventListener("click", () => { ins = +b.dataset.in; shown = 1; $$("[data-in]", root).forEach(x => x.classList.toggle("on", x === b)); chain(); }));
+    $("#in-next", root).addEventListener("click", () => { shown = shown >= 4 ? 1 : shown + 1; chain(); }); chain();
+    $("#flow", root).addEventListener("click", e => { const b = e.target.closest("[data-go]"); if (!b) return; const [l, s] = b.dataset.go.split(",").map(Number); goStep(l, s, true); });
+  },
+  code: `# pip install ydata-profiling
+from ydata_profiling import ProfileReport    # formerly pandas_profiling
+
+profile = ProfileReport(df, title="Student performance EDA")
+profile.to_file("eda_report.html")           # open it in your browser
+# In Jupyter: profile.to_notebook_iframe()`,
+  outcome: "You ran the full EDA loop: an automated report for the overview, your own analysis for the detail and clear insight statements at the end.",
+  take: ["A profiling report gives a fast first look: types, missing values, distributions, correlations and alerts.", "Automation finds the what. You still explain the why and decide what to do.", "A good insight has four parts: observation, evidence, meaning and action."]
+};
+const L3 = { title: "Detecting anomalies and discovering insight", short: "Detect", blurb: "Find values that don’t belong, decide whether they’re mistakes or discoveries, and turn findings into insight.", tools: "pandas, ydata-profiling, Seaborn", steps: [S31, S32, S33, S34, S35] };
+/* ================= APP ================= */
+function consoleSim(host, cmds) {
+  host.innerHTML = `<div class="console"><div class="console-top"><span class="lights"><i></i><i></i><i></i></span><span>students.ipynb</span></div><div class="console-cmds" role="group" aria-label="Commands">${cmds.map((c, i) => `<button type="button" class="chip code-chip" data-i="${i}">${esc(c.cmd)}</button>`).join("")}</div><div class="console-cell"><div class="cin"><span class="pr">In [ ]:</span><code class="typed">Click a command above to run it</code></div><div class="cout" aria-live="polite"></div></div></div>`;
+  let n = 0, timer = null;
+  $(".console-cmds", host).addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return; const c = cmds[+b.dataset.i];
+    $$(".console-cmds .chip", host).forEach(x => x.classList.toggle("on", x === b)); n++;
+    const pr = $(".pr", host), typed = $(".typed", host), out = $(".cout", host);
+    pr.textContent = `In [${n}]:`; out.innerHTML = ""; clearInterval(timer);
+    if (REDUCE) { typed.textContent = c.cmd; out.innerHTML = c.out(); return; }
+    let k = 0; typed.textContent = "";
+    timer = setInterval(() => { k++; typed.textContent = c.cmd.slice(0, k); if (k >= c.cmd.length) { clearInterval(timer); setTimeout(() => { out.innerHTML = c.out(); }, 160); } }, 32);
+  });
+}
+
+const LESSONS = [L1, L2, L3];
+const KEY = "eda-lab-progress-v1";
+const state = { lesson: 0, steps: [0, 0, 0], done: {} };
+(function load() { const s = store.get(KEY, null); if (!s) return; if (s.lesson >= 0 && s.lesson < 3) state.lesson = s.lesson; if (Array.isArray(s.steps) && s.steps.length === 3) state.steps = s.steps.map(v => clamp(+v || 0, 0, 4)); if (s.done && typeof s.done === "object") state.done = s.done; })();
+const save = () => store.set(KEY, state);
+const sk = (l, s) => `l${l + 1}s${s + 1}`;
+const lessonDone = l => LESSONS[l].steps.filter((_, s) => state.done[sk(l, s)]).length;
+const totalDone = () => [0, 1, 2].reduce((a, l) => a + lessonDone(l), 0);
+
+function renderTop() {
+  const t = totalDone(), C = 2 * Math.PI * 15;
+  $("#ring").innerHTML = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15" class="ring-bg"/><circle cx="20" cy="20" r="15" class="ring-fg" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - t / 15)}"/></svg><span><b>${t}</b>/15 steps</span>`;
+  $("#pills").innerHTML = LESSONS.map((L, l) => `<button type="button" class="pill${l === state.lesson ? " on" : ""}" data-l="${l}" data-acc="${l + 1}"><i>${lessonDone(l) === 5 ? "✓" : l + 1}</i><span>${L.short}</span></button>`).join("");
+}
+function renderPath() {
+  $("#path").innerHTML = LESSONS.map((L, l) => { const d = lessonDone(l); return `<article class="lcard${l === state.lesson ? " on" : ""}" data-acc="${l + 1}"><div class="lnum">${l + 1}</div><h3>${L.title}</h3><p>${L.blurb}</p><p class="small muted">Tools: ${L.tools}</p><ol class="lsteps">${L.steps.map((S, s) => `<li class="${state.done[sk(l, s)] ? "done" : ""}">${S.t}</li>`).join("")}</ol><div class="lfoot"><div class="lbar"><i style="width:${d / 5 * 100}%"></i></div><span class="small">${d} of 5</span></div><button type="button" class="btn${l === state.lesson ? " primary" : ""}" data-open="${l}">${d === 5 ? "Review lesson" : d ? "Continue lesson" : "Start lesson"}</button></article>`; }).join("");
+}
+function renderLesson() {
+  const l = state.lesson, L = LESSONS[l], s = state.steps[l], S = L.steps[s], done = !!state.done[sk(l, s)];
+  const host = $("#lesson"); host.dataset.acc = l + 1;
+  const last = l === 2 && s === 4;
+  host.innerHTML = `
+    <div class="lhead"><div class="lnum big">${l + 1}</div><div><p class="muted">Lesson ${l + 1} of 3</p><h2>${L.title}</h2><p>${L.blurb}</p></div></div>
+    <nav class="stepper" aria-label="Steps in this lesson">${L.steps.map((X, k) => `<button type="button" class="sbtn${k === s ? " on" : ""}${state.done[sk(l, k)] ? " done" : ""}" data-s="${k}" ${k === s ? 'aria-current="step"' : ""}><i>${state.done[sk(l, k)] ? "✓" : k + 1}</i><span>${X.t}</span></button>`).join("")}</nav>
+    <article class="step glass" id="step">
+      <header class="step-head"><p class="muted">Step ${s + 1} of 5</p><h3>${S.t}</h3><p class="lede">${S.intro}</p></header>
+      <div class="step-body">${S.body()}</div>
+      ${S.code ? `<div class="py"><h4 class="sub">Try it in Python</h4>${codeBlock(S.code)}</div>` : ""}
+      <section class="outcome${done ? " is-done" : ""}">
+        <div class="ohead"><span class="obadge" aria-hidden="true">${done ? "✓" : s + 1}</span><h4>What we accomplished</h4></div>
+        <p>${S.outcome}</p>
+        <ul class="takeaways">${S.take.map(t => `<li>${t}</li>`).join("")}</ul>
+        <div class="step-nav"><button type="button" class="btn ghost" id="prev" ${l === 0 && s === 0 ? "disabled" : ""}>Previous step</button><button type="button" class="btn primary" id="next">${done ? (last ? "Finish the lab" : s === 4 ? "Go to the next lesson" : "Next step") : (last ? "Mark complete and finish the lab" : s === 4 ? "Mark complete and finish the lesson" : "Mark complete and continue")}</button></div>
+      </section>
+    </article>`;
+  try { S.init($("#step")); } catch (err) { console.error(err); }
+  $("#prev").addEventListener("click", () => { if (s > 0) goStep(l, s - 1, true); else if (l > 0) goStep(l - 1, 4, true); });
+  $("#next").addEventListener("click", () => {
+    state.done[sk(l, s)] = true; save();
+    if (s < 4) goStep(l, s + 1, true); else if (l < 2) goStep(l + 1, 0, true); else { renderAll(); celebrate(); }
+  });
+}
+function renderAll() { renderTop(); renderPath(); renderLesson(); }
+function goStep(l, s, scroll) {
+  state.lesson = l; state.steps[l] = s; save(); renderAll();
+  try { history.replaceState(null, "", "#l" + (l + 1)); } catch (e) { /* ignore */ }
+  if (scroll) { const t = s === 0 ? $("#lesson") : $("#step"); t.scrollIntoView({ behavior: REDUCE ? "auto" : "smooth", block: "start" }); }
+}
+function celebrate() {
+  const t = $("#toast"); t.innerHTML = `<b>You finished the EDA Lab.</b> 15 of 15 steps complete. You can describe data, measure relationships, catch anomalies and write insights. Try the workflow on a dataset of your own next.<button type="button" class="btn ghost" id="toast-x">Close</button>`; t.classList.add("show");
+  $("#toast-x").addEventListener("click", () => t.classList.remove("show"));
+}
+
+/* ---- hero: the class as 40 dots ---- */
+const HERO = {
+  raw: { cap: "This is our class: 40 students, each one a dot. Right now they’re just a pile of data. Pick a lens to explore it." },
+  describe: { get cap() { const v = colv("score"); return `Describe: stacked by exam score, the dots form a distribution. The middle half of the class scored between ${Math.round(quantile(v, .25))} and ${Math.round(quantile(v, .75))}. One student sits alone at 0.`; } },
+  correlate: { cap: "Correlate: study hours left to right, score bottom to top. The cloud rises: students who study more tend to score higher." },
+  detect: { cap: "Detect: two dots refuse to fit. A score of 0 and someone studying 22 hours a day (drawn at the edge). Errors or discoveries?" }
+};
+function heroLayouts() {
+  const W = 520, H = 340, r = rng(8), L = { raw: [], describe: [], correlate: [], detect: [] };
+  const bins = {};
+  DATA.forEach((d, i) => {
+    L.raw.push([40 + r() * 450, 30 + r() * 270]);
+    const b = Math.min(9, Math.floor(d.score / 10)); bins[b] = (bins[b] || 0) + 1;
+    L.describe.push([52 + b * 46, 300 - bins[b] * 21]);
+    const x = 50 + Math.min(d.study_hours, 10) / 10 * 440, y = 300 - d.score / 100 * 270;
+    L.correlate.push([x, y]); L.detect.push([x, y]);
+  });
+  return { W, H, L };
+}
+function initHero() {
+  const { W, H, L } = heroLayouts(), svg = $("#hero-svg");
+  const fit = linfit(CLEAN.map(d => d.study_hours), CLEAN.map(d => d.score));
+  const tx = h => 50 + h / 10 * 440, ty = s => 300 - s / 100 * 270;
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Forty students shown as dots">`;
+  s += `<g class="hl" data-m="describe">${[0, 20, 40, 60, 80, 100].map(v => `<text class="tick" x="${52 + v / 10 * 46 - 23}" y="324" text-anchor="middle">${v}</text>`).join("")}<line class="axis" x1="20" x2="510" y1="308" y2="308"/><text class="alabel" x="270" y="338" text-anchor="middle">exam score</text></g>`;
+  s += `<g class="hl" data-m="correlate detect"><line class="axis" x1="50" x2="495" y1="308" y2="308"/><line class="axis" x1="50" x2="50" y1="20" y2="308"/>${[0, 2, 4, 6, 8, 10].map(v => `<text class="tick" x="${tx(v)}" y="324" text-anchor="middle">${v}</text>`).join("")}<text class="alabel" x="270" y="338" text-anchor="middle">study hours per day</text><text class="alabel" transform="translate(28 165) rotate(-90)" text-anchor="middle">score</text></g>`;
+  s += `<g class="hl" data-m="correlate"><line class="trend" x1="${tx(1)}" y1="${ty(fit.a + fit.b)}" x2="${tx(9.5)}" y2="${ty(fit.a + fit.b * 9.5)}"/></g>`;
+  s += `<g class="hl" data-m="detect"><text class="mklab flagtxt" x="${tx(10) - 8}" y="${ty(ANOM_STUDY.score) - 14}" text-anchor="end">${ANOM_STUDY.name}: 22 h?</text><text class="mklab flagtxt" x="${tx(ANOM_SCORE.study_hours) + 12}" y="${ty(0) - 6}">${ANOM_SCORE.name}: score 0?</text></g>`;
+  DATA.forEach((d, i) => { s += `<circle class="hdot${d === ANOM_SCORE || d === ANOM_STUDY ? " anom" : ""}" r="6.5" cx="0" cy="0" style="transition-delay:${REDUCE ? 0 : i * 14}ms" data-tip="${d.name}: ${d.study_hours} h, score ${d.score}"/>`; });
+  svg.innerHTML = s + "</svg>";
+  const dots = $$(".hdot", svg);
+  function set(mode) {
+    dots.forEach((c, i) => { const [x, y] = L[mode][i]; c.style.transform = `translate(${x}px, ${y}px)`; });
+    svg.dataset.mode = mode;
+    $$(".hl", svg).forEach(g => g.classList.toggle("show", g.dataset.m.split(" ").includes(mode)));
+    $$("[data-hm]").forEach(b => b.classList.toggle("on", b.dataset.hm === mode));
+    $("#hero-cap").textContent = HERO[mode].cap;
+  }
+  $$("[data-hm]").forEach(b => b.addEventListener("click", () => set(b.dataset.hm)));
+  set("raw");
+  if (!REDUCE) setTimeout(() => { if (svg.dataset.mode === "raw") set("describe"); }, 1400);
+}
+
+/* ---- global behaviours ---- */
+function initGlobal() {
+  const tip = $("#tip");
+  document.addEventListener("mouseover", e => { const t = e.target.closest && e.target.closest("[data-tip]"); if (!t) { tip.classList.remove("show"); return; } tip.textContent = t.getAttribute("data-tip"); tip.classList.add("show"); });
+  document.addEventListener("mousemove", e => { if (!tip.classList.contains("show")) return; const x = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8); tip.style.left = x + "px"; tip.style.top = (e.clientY + 16) + "px"; });
+  document.addEventListener("click", e => {
+    const c = e.target.closest(".copy");
+    if (c) { const txt = c.closest(".code").querySelector("code").textContent; const done = () => { c.textContent = "Copied"; setTimeout(() => c.textContent = "Copy code", 1400); }; if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, () => { c.textContent = "Select the code to copy"; }); else c.textContent = "Select the code to copy"; return; }
+    const p = e.target.closest("[data-l]"); if (p) { const l = +p.dataset.l; goStep(l, state.steps[l], true); return; }
+    const o = e.target.closest("[data-open]"); if (o) { const l = +o.dataset.open; goStep(l, lessonDone(l) === 5 ? 0 : state.steps[l], true); return; }
+    const sb = e.target.closest(".sbtn"); if (sb) { goStep(state.lesson, +sb.dataset.s, true); return; }
+    const st = e.target.closest("[data-start]"); if (st) { const l = state.lesson; goStep(l, state.steps[l], true); }
+  });
+  const h = (location.hash || "").slice(1); const m = /^l([123])$/.exec(h);
+  if (m) state.lesson = +m[1] - 1;
+  $("[data-start]").textContent = totalDone() ? "Continue where you left off" : "Start lesson 1";
+  renderAll(); initHero();
+  if (m) setTimeout(() => $("#lesson").scrollIntoView({ block: "start" }), 50);
+}
+document.addEventListener("DOMContentLoaded", initGlobal);
+
+</script>
+</body>
+</html>
